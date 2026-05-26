@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
@@ -6,13 +7,13 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuthResponseDto, LoginDto, RegisterDto } from './dto/auth.dto';
 
 const DUMMY_PASSWORD_HASH = bcrypt.hashSync('invalid-password', 10);
-const jwtExpiresIn = (process.env.JWT_EXPIRATION || '1h') as any;
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -113,7 +114,7 @@ export class AuthService {
       },
       {
         subject: user.id,
-        expiresIn: jwtExpiresIn,
+        expiresIn: (this.configService.get<string>('JWT_EXPIRATION') || '1h') as any,
       },
     );
 
