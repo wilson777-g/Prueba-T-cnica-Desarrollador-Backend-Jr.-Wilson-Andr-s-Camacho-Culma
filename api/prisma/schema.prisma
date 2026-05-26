@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USUARIOS - Autenticación y Autorización
+// ============================================
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  nombre        String
+  password      String      // Hash bcrypt
+  rol           UserRole    @default(OPERADOR)
+  sedeId        String?
+  sede          Sede?       @relation(fields: [sedeId], references: [id], onDelete: SetNull)
+  activo        Boolean     @default(true)
+  ultimoLogin   DateTime?
+  intentosFallo Int         @default(0)
+  bloqueadoHasta DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?   // Soft delete
+
+  @@index([email])
+  @@index([sedeId])
+}
+
+enum UserRole {
+  ADMIN
+  OPERADOR
+}
+
+// ============================================
+// SEDES
+// ============================================
+model Sede {
+  id           String      @id @default(cuid())
+  nombre       String      @unique
+  ciudad       String
+  direccion    String
+  estado       SedeEstado  @default(ACTIVA)
+  usuarios     User[]
+  estudiantes  Estudiante[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([ciudad])
+}
+
+enum SedeEstado {
+  ACTIVA
+  INACTIVA
+}
+
+// ============================================
+// ESTUDIANTES
+// ============================================
+model Estudiante {
+  id              String              @id @default(cuid())
+  nombreCompleto  String
+  email           String              @unique
+  telefono        String
+  documento       String              @unique
+  sedeId          String
+  sede            Sede                @relation(fields: [sedeId], references: [id], onDelete: Restrict)
+  programa        String
+  estado          EstudianteEstado    @default(ACTIVO)
+  fechaInscripcion DateTime            @default(now())
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  deletedAt       DateTime?           // Soft delete
+
+  @@index([sedeId])
+  @@index([estado])
+  @@index([email])
+}
+
+enum EstudianteEstado {
+  ACTIVO
+  INACTIVO
+  RETIRADO
+}
