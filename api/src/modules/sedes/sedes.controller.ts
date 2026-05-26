@@ -7,13 +7,14 @@ import {
   Param,
   Body,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { SedesService } from './sedes.service';
 import { CreateSedeDto, UpdateSedeDto } from './dto/sede.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { AdminGuard } from '../../guards/admin.guard';
 
-@Controller('api/sedes')
+@Controller('sedes')
 @UseGuards(JwtAuthGuard)
 export class SedesController {
   constructor(private sedesService: SedesService) {}
@@ -25,13 +26,13 @@ export class SedesController {
   }
 
   @Get()
-  async findAll() {
-    return this.sedesService.findAll();
+  async findAll(@Request() req: { user: any }) {
+    return this.sedesService.findAll(req.user);
   }
 
   @Get(':id')
-  async findById(@Param('id') id: string) {
-    return this.sedesService.findById(id);
+  async findById(@Param('id') id: string, @Request() req: { user: any }) {
+    return this.sedesService.findById(id, req.user);
   }
 
   @Put(':id')

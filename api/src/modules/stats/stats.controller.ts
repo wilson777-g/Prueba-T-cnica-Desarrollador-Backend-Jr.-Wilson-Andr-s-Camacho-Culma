@@ -3,13 +3,13 @@ import { StatsService } from './stats.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { AdminGuard } from '../../guards/admin.guard';
 
-@Controller('api/stats')
+@Controller('stats')
 @UseGuards(JwtAuthGuard, AdminGuard)
 export class StatsController {
   constructor(private statsService: StatsService) {}
 
   @Get()
-  async getStats(@Request() req) {
+  async getStats(@Request() req: { user: any }) {
     return this.statsService.getStats(req.user);
   }
 }

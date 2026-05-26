@@ -1,18 +1,15 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateEstudianteDto, UpdateEstudianteDto, FilterEstudiantesDto } from './dto/estudiante.dto';
+import { CreateEstudianteDto, FilterEstudiantesDto, UpdateEstudianteDto } from './dto/estudiante.dto';
 
 @Injectable()
 export class EstudiantesService {
   constructor(private prisma: PrismaService) {}
 
-  /**
-   * Crear estudiante
-   * Solo ADMIN puede crear en cualquier sede
-   * OPERADOR solo puede crear en su sede
-   */
   async create(createEstudianteDto: CreateEstudianteDto, user: any) {
-    // Verificar que la sede existe
+    this.assertOperatorHasSede(user);
+
     const sede = await this.prisma.sede.findUnique({
       where: { id: createEstudianteDto.sedeId },
     });
@@ -21,63 +18,64 @@ export class EstudiantesService {
       throw new NotFoundException('Sede no encontrada');
     }
 
-    // OPERADOR solo puede crear en su sede
+    if (sede.estado !== 'ACTIVA') {
+      throw new BadRequestException('No se pueden crear estudiantes en una sede inactiva');
+    }
+
     if (user.rol === 'OPERADOR' && user.sedeId !== createEstudianteDto.sedeId) {
-      throw new ForbiddenException(
-        'Solo puedes crear estudiantes en tu sede',
-      );
+      throw new ForbiddenException('Solo puedes crear estudiantes en tu sede');
     }
 
     try {
-      const estudiante = await this.prisma.estudiante.create({
+      return await this.prisma.estudiante.create({
         data: {
-          ...createEstudianteDto,
+          nombreCompleto: createEstudianteDto.nombreCompleto.trim(),
+          email: createEstudianteDto.email.toLowerCase().trim(),
+          telefono: createEstudianteDto.telefono.trim(),
+          documento: createEstudianteDto.documento.trim(),
+          programa: createEstudianteDto.programa.trim(),
+          sedeId: createEstudianteDto.sedeId,
           estado: createEstudianteDto.estado || 'ACTIVO',
         },
+        include: { sede: true },
       });
-      return estudiante;
     } catch (error) {
-      if (error.code === 'P2002') {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new BadRequestException('Email o documento ya registrado');
       }
       throw error;
     }
   }
 
-  /**
-   * Obtener estudiantes con filtros y restricción por sede
-   * ADMIN ve todos, OPERADOR solo su sede
-   */
   async findAll(filters: FilterEstudiantesDto, user: any) {
-    const page = parseInt(filters.page || '1');
-    const limit = parseInt(filters.limit || '10');
+    this.assertOperatorHasSede(user);
+
+    const page = this.parsePositiveInt(filters.page, 1);
+    const limit = Math.min(this.parsePositiveInt(filters.limit, 10), 100);
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.EstudianteWhereInput = {
+      deletedAt: null,
+    };
 
-    // OPERADOR solo ve su sede
     if (user.rol === 'OPERADOR') {
       where.sedeId = user.sedeId;
     } else if (filters.sedeId) {
-      // ADMIN puede filtrar por sede
       where.sedeId = filters.sedeId;
     }
 
-    // Filtros adicionales
     if (filters.estado) {
       where.estado = filters.estado;
     }
 
-    if (filters.search) {
+    if (filters.search?.trim()) {
+      const search = filters.search.trim();
       where.OR = [
-        { nombreCompleto: { contains: filters.search, mode: 'insensitive' } },
-        { email: { contains: filters.search, mode: 'insensitive' } },
-        { documento: { contains: filters.search, mode: 'insensitive' } },
+        { nombreCompleto: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { documento: { contains: search, mode: 'insensitive' } },
       ];
     }
-
-    // Query sin soft delete
-    where.deletedAt = null;
 
     const [estudiantes, total] = await Promise.all([
       this.prisma.estudiante.findMany({
@@ -101,11 +99,9 @@ export class EstudiantesService {
     };
   }
 
-  /**
-   * Obtener un estudiante por ID
-   * OPERADOR solo puede ver su sede
-   */
   async findById(id: string, user: any) {
+    this.assertOperatorHasSede(user);
+
     const estudiante = await this.prisma.estudiante.findUnique({
       where: { id },
       include: { sede: true },
@@ -115,7 +111,6 @@ export class EstudiantesService {
       throw new NotFoundException('Estudiante no encontrado');
     }
 
-    // OPERADOR solo ve su sede
     if (user.rol === 'OPERADOR' && user.sedeId !== estudiante.sedeId) {
       throw new ForbiddenException('No puedes ver estudiantes de otras sedes');
     }
@@ -123,32 +118,31 @@ export class EstudiantesService {
     return estudiante;
   }
 
-  /**
-   * Actualizar estudiante
-   */
   async update(id: string, updateEstudianteDto: UpdateEstudianteDto, user: any) {
-    const estudiante = await this.findById(id, user);
+    await this.findById(id, user);
 
     try {
-      const updated = await this.prisma.estudiante.update({
+      return await this.prisma.estudiante.update({
         where: { id },
-        data: updateEstudianteDto,
+        data: {
+          nombreCompleto: updateEstudianteDto.nombreCompleto?.trim(),
+          email: updateEstudianteDto.email?.toLowerCase().trim(),
+          telefono: updateEstudianteDto.telefono?.trim(),
+          programa: updateEstudianteDto.programa?.trim(),
+          estado: updateEstudianteDto.estado,
+        },
         include: { sede: true },
       });
-      return updated;
     } catch (error) {
-      if (error.code === 'P2002') {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new BadRequestException('Email o documento ya registrado');
       }
       throw error;
     }
   }
 
-  /**
-   * Eliminar estudiante (soft delete)
-   */
   async delete(id: string, user: any) {
-    const estudiante = await this.findById(id, user);
+    await this.findById(id, user);
 
     const deleted = await this.prisma.estudiante.update({
       where: { id },
@@ -160,5 +154,16 @@ export class EstudiantesService {
       message: 'Estudiante eliminado',
       estudiante: deleted,
     };
+  }
+
+  private assertOperatorHasSede(user: any) {
+    if (user.rol === 'OPERADOR' && !user.sedeId) {
+      throw new ForbiddenException('El operador no tiene sede asignada');
+    }
+  }
+
+  private parsePositiveInt(value: string | undefined, fallback: number) {
+    const parsed = Number.parseInt(value || '', 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
   }
 }

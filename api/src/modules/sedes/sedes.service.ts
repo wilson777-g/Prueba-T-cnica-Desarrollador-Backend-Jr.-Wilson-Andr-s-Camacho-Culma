@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSedeDto, UpdateSedeDto } from './dto/sede.dto';
 
@@ -8,25 +9,25 @@ export class SedesService {
 
   async create(createSedeDto: CreateSedeDto) {
     try {
-      const sede = await this.prisma.sede.create({
+      return await this.prisma.sede.create({
         data: {
-          nombre: createSedeDto.nombre,
-          ciudad: createSedeDto.ciudad,
-          direccion: createSedeDto.direccion,
+          nombre: createSedeDto.nombre.trim(),
+          ciudad: createSedeDto.ciudad.trim(),
+          direccion: createSedeDto.direccion.trim(),
           estado: createSedeDto.estado || 'ACTIVA',
         },
       });
-      return sede;
     } catch (error) {
-      if (error.code === 'P2002') {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new BadRequestException('Sede con este nombre ya existe');
       }
       throw error;
     }
   }
 
-  async findAll() {
-    return await this.prisma.sede.findMany({
+  async findAll(user: any) {
+    return this.prisma.sede.findMany({
+      where: user.rol === 'OPERADOR' ? { id: user.sedeId } : undefined,
       orderBy: { createdAt: 'desc' },
       include: {
         _count: {
@@ -36,27 +37,40 @@ export class SedesService {
     });
   }
 
-  async findById(id: string) {
+  async findById(id: string, user?: any) {
+    if (user?.rol === 'OPERADOR' && user.sedeId !== id) {
+      throw new ForbiddenException('No puedes consultar sedes de otros operadores');
+    }
+
     const sede = await this.prisma.sede.findUnique({
       where: { id },
-      include: {
-        estudiantes: {
-          select: {
-            id: true,
-            nombreCompleto: true,
-            email: true,
-            estado: true,
-          },
-        },
-        usuarios: {
-          select: {
-            id: true,
-            nombre: true,
-            email: true,
-            rol: true,
-          },
-        },
-      },
+      include:
+        user?.rol === 'ADMIN'
+          ? {
+              estudiantes: {
+                where: { deletedAt: null },
+                select: {
+                  id: true,
+                  nombreCompleto: true,
+                  email: true,
+                  estado: true,
+                },
+              },
+              usuarios: {
+                where: { deletedAt: null },
+                select: {
+                  id: true,
+                  nombre: true,
+                  email: true,
+                  rol: true,
+                },
+              },
+            }
+          : {
+              _count: {
+                select: { estudiantes: true, usuarios: true },
+              },
+            },
     });
 
     if (!sede) {
@@ -67,16 +81,20 @@ export class SedesService {
   }
 
   async update(id: string, updateSedeDto: UpdateSedeDto) {
-    const sede = await this.findById(id); // Verificar que existe
+    await this.findById(id, { rol: 'ADMIN' });
 
     try {
-      const updated = await this.prisma.sede.update({
+      return await this.prisma.sede.update({
         where: { id },
-        data: updateSedeDto,
+        data: {
+          ...updateSedeDto,
+          nombre: updateSedeDto.nombre?.trim(),
+          ciudad: updateSedeDto.ciudad?.trim(),
+          direccion: updateSedeDto.direccion?.trim(),
+        },
       });
-      return updated;
     } catch (error) {
-      if (error.code === 'P2002') {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new BadRequestException('Nombre de sede ya existe');
       }
       throw error;
@@ -84,9 +102,8 @@ export class SedesService {
   }
 
   async delete(id: string) {
-    await this.findById(id); // Verificar que existe
+    await this.findById(id, { rol: 'ADMIN' });
 
-    // Soft delete
     const deleted = await this.prisma.sede.update({
       where: { id },
       data: { estado: 'INACTIVA' },

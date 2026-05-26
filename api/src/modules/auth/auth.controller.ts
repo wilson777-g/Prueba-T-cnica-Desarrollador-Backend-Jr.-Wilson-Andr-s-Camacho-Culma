@@ -2,12 +2,14 @@ import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto } from './dto/auth.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
+import { AdminGuard } from '../../guards/admin.guard';
 
-@Controller('api/auth')
+@Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
@@ -19,9 +21,9 @@ export class AuthController {
 
   @Post('verify')
   @UseGuards(JwtAuthGuard)
-  async verify(@Request() req) {
+  async verify(@Request() req: { user: any }) {
     return {
-      message: 'Token válido',
+      message: 'Token valido',
       user: req.user,
     };
   }

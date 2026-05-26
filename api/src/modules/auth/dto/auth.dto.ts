@@ -1,42 +1,54 @@
-import { IsEmail, IsString, MinLength, MaxLength, Matches } from 'class-validator';
+import {
+  IsEmail,
+  IsIn,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+  Matches,
+} from 'class-validator';
 
 export class RegisterDto {
   @IsString()
   @MinLength(3)
   @MaxLength(100)
-  nombre: string;
+  nombre!: string;
 
-  @IsEmail({}, { message: 'Email debe ser válido' })
-  email: string;
+  @IsEmail({}, { message: 'Email debe ser valido' })
+  email!: string;
 
   @IsString()
-  @MinLength(8, { message: 'Contraseña debe tener al menos 8 caracteres' })
-  @MaxLength(50)
+  @MinLength(8, { message: 'Contrasena debe tener al menos 8 caracteres' })
+  @MaxLength(72)
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
-    message: 'Contraseña debe contener mayúscula, minúscula, número y carácter especial',
+    message: 'Contrasena debe contener mayuscula, minuscula, numero y caracter especial',
   })
-  password: string;
+  password!: string;
 
+  @IsIn(['ADMIN', 'OPERADOR'])
+  rol!: 'ADMIN' | 'OPERADOR';
+
+  @IsOptional()
+  @IsString()
   sedeId?: string;
 }
 
 export class LoginDto {
-  @IsEmail()
-  email: string;
+  @IsEmail({}, { message: 'Email debe ser valido' })
+  email!: string;
 
   @IsString()
   @MinLength(1)
-  password: string;
+  password!: string;
 }
 
 export class AuthResponseDto {
-  access_token: string;
-  refresh_token?: string;
-  user: {
+  access_token!: string;
+  user!: {
     id: string;
     email: string;
     nombre: string;
     rol: string;
-    sedeId?: string;
+    sedeId?: string | null;
   };
 }

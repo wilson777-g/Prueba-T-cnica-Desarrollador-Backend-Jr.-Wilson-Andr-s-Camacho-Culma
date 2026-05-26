@@ -6,13 +6,15 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { PrismaModule } from '../prisma/prisma.module';
 
+const jwtExpiresIn = (process.env.JWT_EXPIRATION || '1h') as any;
+
 @Module({
   imports: [
     PrismaModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key',
-      signOptions: { expiresIn: process.env.JWT_EXPIRATION || '1h' },
+      secret: process.env.JWT_SECRET || 'dev-only-change-me',
+      signOptions: { expiresIn: jwtExpiresIn },
     }),
   ],
   controllers: [AuthController],

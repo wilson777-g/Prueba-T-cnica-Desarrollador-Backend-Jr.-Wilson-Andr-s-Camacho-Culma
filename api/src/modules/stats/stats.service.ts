@@ -1,86 +1,86 @@
-import { Injectable, ForbiddenException } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class StatsService {
   constructor(private prisma: PrismaService) {}
 
-  /**
-   * Endpoint de estadísticas
-   * Solo ADMIN puede acceder
-   * Usa queries agregadas de Prisma para mejor performance
-   */
   async getStats(user: any) {
     if (user.rol !== 'ADMIN') {
-      throw new ForbiddenException('Solo administradores pueden ver estadísticas');
+      throw new ForbiddenException('Solo administradores pueden ver estadisticas');
     }
 
-    // Query 1: Total de estudiantes por sede
-    const estudiantesPorSede = await this.prisma.sede.findMany({
-      select: {
-        id: true,
-        nombre: true,
-        ciudad: true,
-        _count: {
-          select: {
-            estudiantes: {
-              where: { deletedAt: null },
-            },
-          },
-        },
-      },
-      orderBy: {
-        nombre: 'asc',
-      },
-    });
-
-    // Query 2: Total de estudiantes por estado
-    const estudiantesPorEstado = await this.prisma.estudiante.groupBy({
-      by: ['estado'],
-      _count: {
-        id: true,
-      },
-      where: {
-        deletedAt: null,
-      },
-    });
-
-    // Query 3: Sede con más estudiantes activos
-    const sedeConMasEstudiantesActivos = await this.prisma.sede.findFirst({
-      select: {
-        id: true,
-        nombre: true,
-        ciudad: true,
-        _count: {
-          select: {
-            estudiantes: {
-              where: {
-                estado: 'ACTIVO',
-                deletedAt: null,
+    const [
+      estudiantesPorSede,
+      estudiantesPorEstado,
+      sedeActivaMasPoblada,
+      totalEstudiantes,
+      totalSedes,
+      totalUsuarios,
+    ] = await Promise.all([
+      this.prisma.sede.findMany({
+        select: {
+          id: true,
+          nombre: true,
+          ciudad: true,
+          _count: {
+            select: {
+              estudiantes: {
+                where: { deletedAt: null },
               },
             },
           },
         },
-      },
-      orderBy: {
-        estudiantes: {
-          _count: 'desc',
+        orderBy: {
+          nombre: 'asc',
         },
-      },
-    });
+      }),
+      this.prisma.estudiante.groupBy({
+        by: ['estado'],
+        _count: {
+          id: true,
+        },
+        where: {
+          deletedAt: null,
+        },
+      }),
+      this.prisma.estudiante.groupBy({
+        by: ['sedeId'],
+        _count: {
+          id: true,
+        },
+        where: {
+          estado: 'ACTIVO',
+          deletedAt: null,
+        },
+        orderBy: {
+          _count: {
+            id: 'desc',
+          },
+        },
+        take: 1,
+      }),
+      this.prisma.estudiante.count({
+        where: { deletedAt: null },
+      }),
+      this.prisma.sede.count({
+        where: { estado: 'ACTIVA' },
+      }),
+      this.prisma.user.count({
+        where: { activo: true, deletedAt: null },
+      }),
+    ]);
 
-    // Query 4: Estadísticas generales
-    const totalEstudiantes = await this.prisma.estudiante.count({
-      where: { deletedAt: null },
-    });
-
-    const totalSedes = await this.prisma.sede.count({
-      where: { estado: 'ACTIVA' },
-    });
-
-    const totalUsuarios = await this.prisma.user.count({
-      where: { activo: true },
-    });
+    const sedeConMasActivos = sedeActivaMasPoblada[0]
+      ? await this.prisma.sede.findUnique({
+          where: { id: sedeActivaMasPoblada[0].sedeId },
+          select: {
+            id: true,
+            nombre: true,
+            ciudad: true,
+          },
+        })
+      : null;
 
     return {
       resumen: {
@@ -98,14 +98,15 @@ export class StatsService {
         acc[item.estado] = item._count.id;
         return acc;
       }, {} as Record<string, number>),
-      sedeConMasEstudiantesActivos: sedeConMasEstudiantesActivos
-        ? {
-            sedeId: sedeConMasEstudiantesActivos.id,
-            sedeName: sedeConMasEstudiantesActivos.nombre,
-            ciudad: sedeConMasEstudiantesActivos.ciudad,
-            estudiantesActivos: sedeConMasEstudiantesActivos._count.estudiantes,
-          }
-        : null,
+      sedeConMasEstudiantesActivos:
+        sedeConMasActivos && sedeActivaMasPoblada[0]
+          ? {
+              sedeId: sedeConMasActivos.id,
+              sedeName: sedeConMasActivos.nombre,
+              ciudad: sedeConMasActivos.ciudad,
+              estudiantesActivos: sedeActivaMasPoblada[0]._count.id,
+            }
+          : null,
       timestamp: new Date().toISOString(),
     };
   }

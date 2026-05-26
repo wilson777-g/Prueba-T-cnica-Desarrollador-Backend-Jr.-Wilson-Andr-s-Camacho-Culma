@@ -1,21 +1,23 @@
-import { IsString, IsNotEmpty, IsOptional, IsIn } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
+export type SedeEstadoValue = 'ACTIVA' | 'INACTIVA';
 
 export class CreateSedeDto {
   @IsString()
   @IsNotEmpty()
-  nombre: string;
+  nombre!: string;
 
   @IsString()
   @IsNotEmpty()
-  ciudad: string;
+  ciudad!: string;
 
   @IsString()
   @IsNotEmpty()
-  direccion: string;
+  direccion!: string;
 
   @IsOptional()
   @IsIn(['ACTIVA', 'INACTIVA'])
-  estado?: string;
+  estado?: SedeEstadoValue;
 }
 
 export class UpdateSedeDto {
@@ -33,5 +35,5 @@ export class UpdateSedeDto {
 
   @IsOptional()
   @IsIn(['ACTIVA', 'INACTIVA'])
-  estado?: string;
+  estado?: SedeEstadoValue;
 }

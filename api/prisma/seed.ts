@@ -4,36 +4,45 @@ import * as bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Iniciando seed...');
+  console.log('Iniciando seed...');
 
-  // ============================================
-  // 1. CREAR SEDES
-  // ============================================
   const bogota = await prisma.sede.upsert({
-    where: { nombre: 'Bogotá' },
-    update: {},
+    where: { nombre: 'Bogota' },
+    update: {
+      ciudad: 'Bogota',
+      direccion: 'Cra 7 #100-50, Bogota',
+      estado: 'ACTIVA',
+    },
     create: {
-      nombre: 'Bogotá',
-      ciudad: 'Bogotá',
-      direccion: 'Cra 7 #100-50, Bogotá',
+      nombre: 'Bogota',
+      ciudad: 'Bogota',
+      direccion: 'Cra 7 #100-50, Bogota',
       estado: 'ACTIVA',
     },
   });
 
   const medellin = await prisma.sede.upsert({
-    where: { nombre: 'Medellín' },
-    update: {},
+    where: { nombre: 'Medellin' },
+    update: {
+      ciudad: 'Medellin',
+      direccion: 'Cra 45 #50-100, Medellin',
+      estado: 'ACTIVA',
+    },
     create: {
-      nombre: 'Medellín',
-      ciudad: 'Medellín',
-      direccion: 'Cra 45 #50-100, Medellín',
+      nombre: 'Medellin',
+      ciudad: 'Medellin',
+      direccion: 'Cra 45 #50-100, Medellin',
       estado: 'ACTIVA',
     },
   });
 
   const cali = await prisma.sede.upsert({
     where: { nombre: 'Cali' },
-    update: {},
+    update: {
+      ciudad: 'Cali',
+      direccion: 'Cra 5 #60-30, Cali',
+      estado: 'ACTIVA',
+    },
     create: {
       nombre: 'Cali',
       ciudad: 'Cali',
@@ -42,17 +51,19 @@ async function main() {
     },
   });
 
-  console.log('✅ Sedes creadas');
-
-  // ============================================
-  // 2. CREAR USUARIOS (ADMIN + OPERADORES)
-  // ============================================
   const adminPassword = await bcrypt.hash('Admin123!', 10);
   const operadorPassword = await bcrypt.hash('Oper123!', 10);
 
-  const admin = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: 'admin@dnamusic.co' },
-    update: {},
+    update: {
+      nombre: 'Administrador DNA Music',
+      password: adminPassword,
+      rol: 'ADMIN',
+      sedeId: null,
+      activo: true,
+      deletedAt: null,
+    },
     create: {
       email: 'admin@dnamusic.co',
       nombre: 'Administrador DNA Music',
@@ -62,12 +73,19 @@ async function main() {
     },
   });
 
-  const operadorBog = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: 'operador.bog@dnamusic.co' },
-    update: {},
+    update: {
+      nombre: 'Operador Bogota',
+      password: operadorPassword,
+      rol: 'OPERADOR',
+      sedeId: bogota.id,
+      activo: true,
+      deletedAt: null,
+    },
     create: {
       email: 'operador.bog@dnamusic.co',
-      nombre: 'Operador Bogotá',
+      nombre: 'Operador Bogota',
       password: operadorPassword,
       rol: 'OPERADOR',
       sedeId: bogota.id,
@@ -75,12 +93,19 @@ async function main() {
     },
   });
 
-  const operadorMed = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: 'operador.med@dnamusic.co' },
-    update: {},
+    update: {
+      nombre: 'Operador Medellin',
+      password: operadorPassword,
+      rol: 'OPERADOR',
+      sedeId: medellin.id,
+      activo: true,
+      deletedAt: null,
+    },
     create: {
       email: 'operador.med@dnamusic.co',
-      nombre: 'Operador Medellín',
+      nombre: 'Operador Medellin',
       password: operadorPassword,
       rol: 'OPERADOR',
       sedeId: medellin.id,
@@ -88,14 +113,9 @@ async function main() {
     },
   });
 
-  console.log('✅ Usuarios creados');
-
-  // ============================================
-  // 3. CREAR ESTUDIANTES
-  // ============================================
   const estudiantes = [
     {
-      nombreCompleto: 'Juan Carlos Rodríguez',
+      nombreCompleto: 'Juan Carlos Rodriguez',
       email: 'juan.rodriguez@example.com',
       telefono: '3001234567',
       documento: '1001234567',
@@ -104,7 +124,7 @@ async function main() {
       estado: 'ACTIVO' as const,
     },
     {
-      nombreCompleto: 'María García López',
+      nombreCompleto: 'Maria Garcia Lopez',
       email: 'maria.garcia@example.com',
       telefono: '3107654321',
       documento: '1007654321',
@@ -113,7 +133,7 @@ async function main() {
       estado: 'ACTIVO' as const,
     },
     {
-      nombreCompleto: 'Carlos Pérez Morales',
+      nombreCompleto: 'Carlos Perez Morales',
       email: 'carlos.perez@example.com',
       telefono: '3112345678',
       documento: '1112345678',
@@ -122,20 +142,20 @@ async function main() {
       estado: 'ACTIVO' as const,
     },
     {
-      nombreCompleto: 'Laura Martínez Flores',
+      nombreCompleto: 'Laura Martinez Flores',
       email: 'laura.martinez@example.com',
       telefono: '3119876543',
       documento: '1119876543',
-      programa: 'Violín',
+      programa: 'Violin',
       sedeId: medellin.id,
       estado: 'INACTIVO' as const,
     },
     {
-      nombreCompleto: 'Diego Sánchez Hernández',
+      nombreCompleto: 'Diego Sanchez Hernandez',
       email: 'diego.sanchez@example.com',
       telefono: '3154567890',
       documento: '1154567890',
-      programa: 'Composición',
+      programa: 'Composicion',
       sedeId: cali.id,
       estado: 'ACTIVO' as const,
     },
@@ -150,37 +170,27 @@ async function main() {
     },
   ];
 
-  for (const est of estudiantes) {
+  for (const estudiante of estudiantes) {
     await prisma.estudiante.upsert({
-      where: { email: est.email },
-      update: {},
-      create: est,
+      where: { email: estudiante.email },
+      update: {
+        ...estudiante,
+        deletedAt: null,
+      },
+      create: estudiante,
     });
   }
 
-  console.log('✅ Estudiantes creados');
-
-  console.log('✨ Seed completado exitosamente');
-  console.log(`
-  📋 Credenciales de prueba:
-  
-  ADMIN:
-  - Email: admin@dnamusic.co
-  - Password: Admin123!
-  
-  OPERADOR (Bogotá):
-  - Email: operador.bog@dnamusic.co
-  - Password: Oper123!
-  
-  OPERADOR (Medellín):
-  - Email: operador.med@dnamusic.co
-  - Password: Oper123!
-  `);
+  console.log('Seed completado.');
+  console.log('Credenciales:');
+  console.log('ADMIN: admin@dnamusic.co / Admin123!');
+  console.log('OPERADOR BOG: operador.bog@dnamusic.co / Oper123!');
+  console.log('OPERADOR MED: operador.med@dnamusic.co / Oper123!');
 }
 
 main()
-  .catch(e => {
-    console.error(e);
+  .catch(error => {
+    console.error(error);
     process.exit(1);
   })
   .finally(async () => {

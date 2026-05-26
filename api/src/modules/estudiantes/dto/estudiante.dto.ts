@@ -1,42 +1,37 @@
-import {
-  IsString,
-  IsEmail,
-  IsOptional,
-  IsIn,
-  MinLength,
-  Matches,
-} from 'class-validator';
+import { IsEmail, IsIn, IsOptional, IsString, Matches, MinLength } from 'class-validator';
+
+export type EstudianteEstadoValue = 'ACTIVO' | 'INACTIVO' | 'RETIRADO';
 
 export class CreateEstudianteDto {
   @IsString()
   @MinLength(3)
-  nombreCompleto: string;
+  nombreCompleto!: string;
 
-  @IsEmail()
-  email: string;
+  @IsEmail({}, { message: 'Email debe ser valido' })
+  email!: string;
 
   @IsString()
   @Matches(/^[0-9]{7,15}$/, {
-    message: 'Teléfono debe contener solo números (7-15 dígitos)',
+    message: 'Telefono debe contener solo numeros de 7 a 15 digitos',
   })
-  telefono: string;
+  telefono!: string;
 
   @IsString()
   @Matches(/^[0-9]{5,20}$/, {
-    message: 'Documento debe ser válido',
+    message: 'Documento debe ser valido',
   })
-  documento: string;
+  documento!: string;
 
   @IsString()
-  sedeId: string;
+  sedeId!: string;
 
   @IsString()
   @MinLength(2)
-  programa: string;
+  programa!: string;
 
   @IsOptional()
   @IsIn(['ACTIVO', 'INACTIVO', 'RETIRADO'])
-  estado?: string;
+  estado?: EstudianteEstadoValue;
 }
 
 export class UpdateEstudianteDto {
@@ -46,20 +41,24 @@ export class UpdateEstudianteDto {
   nombreCompleto?: string;
 
   @IsOptional()
-  @IsEmail()
+  @IsEmail({}, { message: 'Email debe ser valido' })
   email?: string;
 
   @IsOptional()
   @IsString()
+  @Matches(/^[0-9]{7,15}$/, {
+    message: 'Telefono debe contener solo numeros de 7 a 15 digitos',
+  })
   telefono?: string;
 
   @IsOptional()
   @IsString()
+  @MinLength(2)
   programa?: string;
 
   @IsOptional()
   @IsIn(['ACTIVO', 'INACTIVO', 'RETIRADO'])
-  estado?: string;
+  estado?: EstudianteEstadoValue;
 }
 
 export class FilterEstudiantesDto {
@@ -69,7 +68,7 @@ export class FilterEstudiantesDto {
 
   @IsOptional()
   @IsIn(['ACTIVO', 'INACTIVO', 'RETIRADO'])
-  estado?: string;
+  estado?: EstudianteEstadoValue;
 
   @IsOptional()
   @IsString()
