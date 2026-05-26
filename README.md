@@ -42,6 +42,8 @@ URLs locales:
 - API: `http://localhost:3000/api`
 - Frontend: `http://localhost:3001`
 
+Nota: el `docker-compose.yml` publica PostgreSQL en el puerto local `5433` para evitar choques con instalaciones locales de PostgreSQL en `5432`.
+
 ## 2. URLs de despliegue
 
 - Backend: pendiente de publicar.

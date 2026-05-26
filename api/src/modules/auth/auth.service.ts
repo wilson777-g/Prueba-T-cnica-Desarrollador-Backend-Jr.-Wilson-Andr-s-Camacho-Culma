@@ -114,7 +114,7 @@ export class AuthService {
       },
       {
         subject: user.id,
-        expiresIn: (this.configService.get<string>('JWT_EXPIRATION') || '1h') as any,
+        expiresIn: this.configService.getOrThrow<string>('JWT_EXPIRATION') as any,
       },
     );
 

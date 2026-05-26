@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: dna_music
       POSTGRES_PASSWORD: dna_music
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - dna_music_pgdata:/var/lib/postgresql/data
 
