@@ -1,4 +1,4 @@
-# Analisis tecnico de performance
+﻿# Analisis tecnico de performance
 
 Caso: el modulo de agendamientos del dia tarda entre 6 y 10 segundos en cargar.
 
@@ -49,3 +49,4 @@ No cambiaria codigo antes de medir. Primero separaria si el tiempo se pierde en 
 - N+1: muchos queries similares por cada item listado.
 - Red: alta latencia o fallos intermitentes sin consumo alto en backend/DB.
 - Infraestructura: CPU, memoria, pool de conexiones o locks saturados durante la ventana del problema.
+
