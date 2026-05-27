@@ -22,17 +22,37 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     window.location.href = '/login';
   };
 
+  const roleLabel = user?.rol === 'ADMIN' ? 'Administrador' : 'Operador';
+  const roleDetail = user?.rol === 'ADMIN' ? 'Control general de sedes' : 'Gestion de sede asignada';
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
         <div className={styles.headerContent}>
-          <h1 className={styles.logo}>🎵 DNA Music</h1>
+          <div className={styles.brand}>
+            <div className={styles.brandMark} aria-hidden="true">
+              DN
+            </div>
+            <div>
+              <h1 className={styles.logo}>DNA Music</h1>
+              <span className={styles.logoCaption}>Sistema de Gestion Academica</span>
+            </div>
+          </div>
           {user && (
             <div className={styles.userInfo}>
-              <span>{user.nombre}</span>
-              <span className={styles.badge}>{user.rol}</span>
-              <button onClick={handleLogout} className={styles.logoutBtn}>
-                Cerrar sesión
+              <div className={styles.identity}>
+                <span className={styles.userName}>{user.nombre}</span>
+                <span className={styles.roleDetail}>{roleDetail}</span>
+              </div>
+              <span
+                className={`${styles.badge} ${
+                  user.rol === 'ADMIN' ? styles.adminBadge : styles.operatorBadge
+                }`}
+              >
+                {roleLabel}
+              </span>
+              <button type="button" onClick={handleLogout} className={styles.logoutBtn}>
+                Cerrar sesion
               </button>
             </div>
           )}

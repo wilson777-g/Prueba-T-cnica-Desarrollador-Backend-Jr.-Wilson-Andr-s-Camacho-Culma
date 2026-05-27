@@ -19,6 +19,8 @@ export const EstudiantesPage: React.FC = () => {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingEstudianteId, setEditingEstudianteId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Estudiante | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [selectedSede, setSelectedSede] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
@@ -176,18 +178,27 @@ export const EstudiantesPage: React.FC = () => {
       return;
     }
 
-    const confirmed = window.confirm(`Eliminar a ${estudiante.nombreCompleto}?`);
-    if (!confirmed) {
+    setDeleteTarget(estudiante);
+    setError('');
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!isAdmin || !deleteTarget) {
       return;
     }
 
     try {
-      await apiService.deleteEstudiante(estudiante.id);
+      setDeleting(true);
+      await apiService.deleteEstudiante(deleteTarget.id);
       setError('');
       setPage(current => (current > 1 && estudiantes.length === 1 ? current - 1 : current));
       setRefreshKey(current => current + 1);
+      setDeleteTarget(null);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al eliminar estudiante');
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -398,34 +409,18 @@ export const EstudiantesPage: React.FC = () => {
                   <td>{new Date(estudiante.fechaInscripcion).toLocaleDateString()}</td>
                   {isAdmin && (
                     <td>
-                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <div className={styles.actionButtons}>
                         <button
                           type="button"
                           onClick={() => handleEditEstudiante(estudiante)}
-                          style={{
-                            padding: '0.45rem 0.75rem',
-                            border: '1px solid #667eea',
-                            borderRadius: '4px',
-                            background: 'white',
-                            color: '#667eea',
-                            cursor: 'pointer',
-                            fontWeight: 600,
-                          }}
+                          className={`${styles.btnAction} ${styles.btnEdit}`}
                         >
                           Editar
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteEstudiante(estudiante)}
-                          style={{
-                            padding: '0.45rem 0.75rem',
-                            border: '1px solid #dc3545',
-                            borderRadius: '4px',
-                            background: '#dc3545',
-                            color: 'white',
-                            cursor: 'pointer',
-                            fontWeight: 600,
-                          }}
+                          className={`${styles.btnAction} ${styles.btnDelete}`}
                         >
                           Eliminar
                         </button>
@@ -466,6 +461,46 @@ export const EstudiantesPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {deleteTarget && (
+        <div className={styles.modalOverlay} role="presentation">
+          <div
+            className={styles.confirmModal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-title"
+          >
+            <div className={styles.modalIcon} aria-hidden="true">
+              !
+            </div>
+            <div className={styles.modalContent}>
+              <span className={styles.modalEyebrow}>Confirmar eliminacion</span>
+              <h3 id="delete-title">Eliminar estudiante</h3>
+              <p>
+                Esta accion desactivara el registro de <strong>{deleteTarget.nombreCompleto}</strong>.
+              </p>
+            </div>
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className={styles.btnModalSecondary}
+                disabled={deleting}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className={styles.btnModalDanger}
+                disabled={deleting}
+              >
+                {deleting ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
