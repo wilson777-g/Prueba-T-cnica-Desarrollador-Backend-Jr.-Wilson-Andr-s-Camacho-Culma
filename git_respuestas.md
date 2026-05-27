@@ -8,7 +8,7 @@ git pull origin main
 git checkout -b feature/filtro-por-sede
 ```
 
-`git checkout main` cambia a la rama base. `git pull origin main` actualiza la rama local. `git checkout -b` crea la rama nueva y se mueve a ella.
+`git checkout main` cambia a la rama base. `git pull origin main` trae los ultimos cambios. `git checkout -b` crea la rama nueva y se mueve a ella.
 
 ## 2. Commit con conventional commits
 
@@ -17,7 +17,7 @@ git add .
 git commit -m "feat: agregar filtro por sede en estudiantes"
 ```
 
-`git add .` prepara los cambios. El mensaje usa el prefijo `feat:` porque agrega funcionalidad.
+`git add .` prepara los cambios. El mensaje usa `feat:` porque agrega funcionalidad. Para una correccion usaria `fix:` y para documentacion `docs:`.
 
 ## 3. Subir la rama al remoto
 
@@ -25,7 +25,7 @@ git commit -m "feat: agregar filtro por sede en estudiantes"
 git push -u origin feature/filtro-por-sede
 ```
 
-Sube la rama y deja configurado el tracking para futuros `git push` y `git pull`.
+Sube la rama y configura tracking para futuros `git push` y `git pull` sin repetir el remoto.
 
 ## 4. Crear un Pull Request
 
@@ -34,12 +34,14 @@ Entraria al repositorio en GitHub, abriria la rama `feature/filtro-por-sede` y c
 En la descripcion incluiria:
 
 - Resumen del cambio.
-- Endpoints o pantallas afectadas.
-- Como se probo.
+- Pantallas, endpoints o reglas de negocio afectadas.
+- Como se probo: build, pruebas manuales y casos por rol.
 - Riesgos conocidos o decisiones tomadas.
 - Capturas si aplica al frontend.
 
 ## 5. Que hacer si hay conflictos al hacer pull de `main`
+
+Primero actualizaria referencias y ubicaria la rama:
 
 ```bash
 git status
@@ -62,7 +64,7 @@ git commit
 npm run build
 ```
 
-Si el proyecto usa rebase en vez de merge:
+Si el equipo usa rebase en vez de merge:
 
 ```bash
 git fetch origin
@@ -77,4 +79,4 @@ git add <archivo-resuelto>
 git rebase --continue
 ```
 
-Al final correria pruebas/build, revisaria `git status` y subiria la rama actualizada.
+Al final correria build/pruebas, revisaria `git status` y subiria la rama actualizada.

@@ -13,6 +13,7 @@ import {
 import { EstudiantesService } from './estudiantes.service';
 import { CreateEstudianteDto, UpdateEstudianteDto, FilterEstudiantesDto } from './dto/estudiante.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
+import { AdminGuard } from '../../guards/admin.guard';
 
 @Controller('estudiantes')
 @UseGuards(JwtAuthGuard)
@@ -35,6 +36,7 @@ export class EstudiantesController {
   }
 
   @Put(':id')
+  @UseGuards(AdminGuard)
   async update(
     @Param('id') id: string,
     @Body() updateEstudianteDto: UpdateEstudianteDto,
@@ -44,6 +46,7 @@ export class EstudiantesController {
   }
 
   @Delete(':id')
+  @UseGuards(AdminGuard)
   async delete(@Param('id') id: string, @Request() req: { user: any }) {
     return this.estudiantesService.delete(id, req.user);
   }

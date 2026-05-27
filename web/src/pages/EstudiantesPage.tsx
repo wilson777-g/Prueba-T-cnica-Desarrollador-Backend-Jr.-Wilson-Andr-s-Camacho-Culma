@@ -18,10 +18,12 @@ export const EstudiantesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editingEstudianteId, setEditingEstudianteId] = useState<string | null>(null);
   const [selectedSede, setSelectedSede] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
   const [page, setPage] = useState(1);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const [formData, setFormData] = useState({
     nombreCompleto: '',
@@ -115,7 +117,7 @@ export const EstudiantesPage: React.FC = () => {
       cancelled = true;
       window.clearTimeout(debounceId);
     };
-  }, [user, page, selectedSede, filterEstado, searchTerm]);
+  }, [user, page, selectedSede, filterEstado, searchTerm, refreshKey]);
 
   const sedesDisponibles = useMemo(() => {
     if (user?.rol !== 'OPERADOR') {
@@ -125,7 +127,71 @@ export const EstudiantesPage: React.FC = () => {
     return sedes.filter(sede => sede.id === user.sedeId);
   }, [sedes, user]);
 
-  const handleCreateEstudiante = async (event: React.FormEvent) => {
+  const isAdmin = user?.rol === 'ADMIN';
+
+  const resetForm = () => {
+    setFormData({
+      nombreCompleto: '',
+      email: '',
+      telefono: '',
+      documento: '',
+      programa: '',
+      sedeId: user?.rol === 'OPERADOR' ? user.sedeId || '' : '',
+      estado: 'ACTIVO',
+    });
+    setEditingEstudianteId(null);
+  };
+
+  const handleToggleForm = () => {
+    if (showForm) {
+      resetForm();
+      setShowForm(false);
+      return;
+    }
+
+    setShowForm(true);
+  };
+
+  const handleEditEstudiante = (estudiante: Estudiante) => {
+    if (!isAdmin) {
+      return;
+    }
+
+    setFormData({
+      nombreCompleto: estudiante.nombreCompleto,
+      email: estudiante.email,
+      telefono: estudiante.telefono,
+      documento: estudiante.documento,
+      programa: estudiante.programa,
+      sedeId: estudiante.sedeId,
+      estado: estudiante.estado,
+    });
+    setEditingEstudianteId(estudiante.id);
+    setShowForm(true);
+    setError('');
+  };
+
+  const handleDeleteEstudiante = async (estudiante: Estudiante) => {
+    if (!isAdmin) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Eliminar a ${estudiante.nombreCompleto}?`);
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await apiService.deleteEstudiante(estudiante.id);
+      setError('');
+      setPage(current => (current > 1 && estudiantes.length === 1 ? current - 1 : current));
+      setRefreshKey(current => current + 1);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Error al eliminar estudiante');
+    }
+  };
+
+  const handleSubmitEstudiante = async (event: React.FormEvent) => {
     event.preventDefault();
     setError('');
 
@@ -136,24 +202,28 @@ export const EstudiantesPage: React.FC = () => {
     }
 
     try {
-      await apiService.createEstudiante({
+      const estudianteData = {
         ...formData,
         sedeId,
-      });
+      };
 
-      setFormData({
-        nombreCompleto: '',
-        email: '',
-        telefono: '',
-        documento: '',
-        programa: '',
-        sedeId: user?.rol === 'OPERADOR' ? user.sedeId || '' : '',
-        estado: 'ACTIVO',
-      });
+      if (editingEstudianteId) {
+        if (!isAdmin) {
+          setError('No tienes permisos para editar estudiantes');
+          return;
+        }
+
+        await apiService.updateEstudiante(editingEstudianteId, estudianteData);
+      } else {
+        await apiService.createEstudiante(estudianteData);
+      }
+
+      resetForm();
       setShowForm(false);
       setPage(1);
+      setRefreshKey(current => current + 1);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al crear estudiante');
+      setError(err.response?.data?.message || 'Error al guardar estudiante');
     }
   };
 
@@ -213,14 +283,14 @@ export const EstudiantesPage: React.FC = () => {
           </select>
         </div>
 
-        <button onClick={() => setShowForm(!showForm)} className={styles.btnPrimary}>
+        <button type="button" onClick={handleToggleForm} className={styles.btnPrimary}>
           {showForm ? 'Cancelar' : '+ Nuevo Estudiante'}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreateEstudiante} className={styles.formContainer}>
-          <h3>Crear Nuevo Estudiante</h3>
+        <form onSubmit={handleSubmitEstudiante} className={styles.formContainer}>
+          <h3>{editingEstudianteId ? 'Editar Estudiante' : 'Crear Nuevo Estudiante'}</h3>
 
           <div className={styles.gridForm}>
             <div className={styles.formGroup}>
@@ -292,7 +362,7 @@ export const EstudiantesPage: React.FC = () => {
           </div>
 
           <button type="submit" className={styles.btnPrimary}>
-            Crear Estudiante
+            {editingEstudianteId ? 'Guardar Cambios' : 'Crear Estudiante'}
           </button>
         </form>
       )}
@@ -308,6 +378,7 @@ export const EstudiantesPage: React.FC = () => {
               <th>Sede</th>
               <th>Estado</th>
               <th>Fecha Inscripcion</th>
+              {isAdmin && <th>Acciones</th>}
             </tr>
           </thead>
           <tbody>
@@ -325,11 +396,47 @@ export const EstudiantesPage: React.FC = () => {
                     </span>
                   </td>
                   <td>{new Date(estudiante.fechaInscripcion).toLocaleDateString()}</td>
+                  {isAdmin && (
+                    <td>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleEditEstudiante(estudiante)}
+                          style={{
+                            padding: '0.45rem 0.75rem',
+                            border: '1px solid #667eea',
+                            borderRadius: '4px',
+                            background: 'white',
+                            color: '#667eea',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                          }}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteEstudiante(estudiante)}
+                          style={{
+                            padding: '0.45rem 0.75rem',
+                            border: '1px solid #dc3545',
+                            borderRadius: '4px',
+                            background: '#dc3545',
+                            color: 'white',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                          }}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={7} className={styles.empty}>
+                <td colSpan={isAdmin ? 8 : 7} className={styles.empty}>
                   No hay estudiantes para mostrar
                 </td>
               </tr>
