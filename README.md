@@ -1,4 +1,4 @@
-# DNA Music - Prueba tecnica Backend Jr.
+﻿# DNA Music - Prueba tecnica Backend Jr.
 
 Mini aplicacion para gestion de estudiantes por sede. El repo esta separado en `api/` para el backend NestJS y `web/` para el frontend React.
 
@@ -46,10 +46,8 @@ Nota: el `docker-compose.yml` publica PostgreSQL en el puerto local `5433` para 
 
 ## 2. URLs de despliegue
 
-- Backend: pendiente de publicar.
-- Frontend: pendiente de publicar.
-
-Antes de entregar la prueba se deben reemplazar estos valores por las URLs reales de Render/Railway/Fly/Vercel.
+- Backend: https://dna-music-api-j323.onrender.com
+- Frontend: https://dna-music-web.vercel.app
 
 ## 3. Credenciales de prueba
 
@@ -191,3 +189,5 @@ Estudiantes:
 Estadisticas:
 
 - `GET /api/stats` - solo ADMIN
+
+
