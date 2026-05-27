@@ -224,7 +224,13 @@ export const EstudiantesPage: React.FC = () => {
           return;
         }
 
-        await apiService.updateEstudiante(editingEstudianteId, estudianteData);
+        await apiService.updateEstudiante(editingEstudianteId, {
+          nombreCompleto: formData.nombreCompleto,
+          email: formData.email,
+          telefono: formData.telefono,
+          programa: formData.programa,
+          estado: formData.estado,
+        });
       } else {
         await apiService.createEstudiante(estudianteData);
       }
