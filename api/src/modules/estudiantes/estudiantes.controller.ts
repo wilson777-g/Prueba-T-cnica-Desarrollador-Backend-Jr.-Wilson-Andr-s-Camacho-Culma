@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Put,
   Delete,
   Param,
@@ -43,6 +44,12 @@ export class EstudiantesController {
     @Request() req: { user: any },
   ) {
     return this.estudiantesService.update(id, updateEstudianteDto, req.user);
+  }
+
+  @Patch(':id/desactivar')
+  @UseGuards(AdminGuard)
+  async desactivar(@Param('id') id: string, @Request() req: { user: any }) {
+    return this.estudiantesService.desactivar(id, req.user);
   }
 
   @Delete(':id')

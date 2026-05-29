@@ -141,6 +141,29 @@ export class EstudiantesService {
     }
   }
 
+  async desactivar(id: string, user: any) {
+    const estudiante = await this.findById(id, user);
+
+    if (estudiante.estado === 'INACTIVO') {
+      throw new BadRequestException('El estudiante ya esta inactivo');
+    }
+
+    if (estudiante.estado !== 'ACTIVO') {
+      throw new BadRequestException(`No se puede desactivar un estudiante en estado ${estudiante.estado}`);
+    }
+
+    const estudianteDesactivado = await this.prisma.estudiante.update({
+      where: { id },
+      data: { estado: 'INACTIVO' },
+      include: { sede: true },
+    });
+
+    return {
+      message: 'Estudiante desactivado correctamente',
+      estudiante: estudianteDesactivado,
+    };
+  }
+
   async delete(id: string, user: any) {
     await this.findById(id, user);
 
