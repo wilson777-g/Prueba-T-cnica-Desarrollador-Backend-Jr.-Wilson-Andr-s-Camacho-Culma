@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import apiService from '../services/api';
 import styles from '../styles/Auth.module.css';
+
+type ServerStatus = 'checking' | 'ready' | 'slow' | 'error';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('admin@dnamusic.co');
@@ -8,6 +10,9 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [copiedField, setCopiedField] = useState('');
+  const [serverStatus, setServerStatus] = useState<ServerStatus>('checking');
+  const apiUrl = apiService.getApiBaseUrl();
+  const serverStatusClass = serverStatus === 'error' ? styles.serverError : styles[serverStatus];
 
   const credentials = [
     {
@@ -22,12 +27,61 @@ export const LoginPage: React.FC = () => {
     },
   ];
 
+  const warmUpServer = async () => {
+    setServerStatus('checking');
+
+    try {
+      await apiService.warmUp();
+      setServerStatus('ready');
+      return true;
+    } catch {
+      setServerStatus('error');
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    let active = true;
+    const timeoutId = window.setTimeout(() => {
+      if (active) {
+        setServerStatus('slow');
+      }
+    }, 3500);
+
+    apiService
+      .warmUp()
+      .then(() => {
+        if (active) {
+          setServerStatus('ready');
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setServerStatus('error');
+        }
+      })
+      .finally(() => window.clearTimeout(timeoutId));
+
+    return () => {
+      active = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
+      if (serverStatus !== 'ready') {
+        const serverReady = await warmUpServer();
+        if (!serverReady) {
+          setError('El servidor de demo aun no responde. Espera unos segundos y vuelve a intentar.');
+          return;
+        }
+      }
+
       await apiService.login(email, password);
       window.location.href = '/';
     } catch (err: any) {
@@ -60,6 +114,24 @@ export const LoginPage: React.FC = () => {
         </div>
 
         <h2>Iniciar Sesion</h2>
+
+        <div className={`${styles.serverStatus} ${serverStatusClass}`}>
+          <div>
+            <strong>
+              {serverStatus === 'ready'
+                ? 'Servidor listo'
+                : serverStatus === 'slow'
+                  ? 'Despertando servidor'
+                  : serverStatus === 'error'
+                    ? 'Servidor en espera'
+                    : 'Preparando servidor'}
+            </strong>
+            <span>{apiUrl}</span>
+          </div>
+          <button type="button" onClick={warmUpServer} disabled={serverStatus === 'checking'} className={styles.warmupBtn}>
+            {serverStatus === 'checking' ? 'Verificando...' : 'Activar API'}
+          </button>
+        </div>
 
         {error && <div className={styles.error}>{error}</div>}
 

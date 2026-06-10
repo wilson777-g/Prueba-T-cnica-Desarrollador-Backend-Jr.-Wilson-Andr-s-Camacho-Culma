@@ -6,6 +6,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { SedesModule } from './modules/sedes/sedes.module';
 import { EstudiantesModule } from './modules/estudiantes/estudiantes.module';
 import { StatsModule } from './modules/stats/stats.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -29,5 +30,6 @@ import { StatsModule } from './modules/stats/stats.module';
     EstudiantesModule,
     StatsModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}

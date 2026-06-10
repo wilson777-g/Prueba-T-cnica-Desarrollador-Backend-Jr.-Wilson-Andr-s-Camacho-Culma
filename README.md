@@ -65,7 +65,16 @@ Nota: el `docker-compose.yml` publica PostgreSQL en el puerto local `5433` para 
 ## 2. URLs de despliegue
 
 - Backend Render: https://dna-music-api-j323.onrender.com
+- Health check publico: https://dna-music-api-j323.onrender.com/api/health
 - Frontend Vercel: https://dna-music-web.vercel.app
+
+El frontend despierta automaticamente el backend al abrir el login consultando `GET /api/health`. Ese endpoint tambien ejecuta una consulta simple a PostgreSQL (`SELECT 1`) para validar y calentar la conexion con la base de datos antes de intentar iniciar sesion.
+
+En Vercel, la variable del frontend debe quedar asi:
+
+```bash
+VITE_API_URL=https://dna-music-api-j323.onrender.com
+```
 
 ## 3. Credenciales de prueba
 

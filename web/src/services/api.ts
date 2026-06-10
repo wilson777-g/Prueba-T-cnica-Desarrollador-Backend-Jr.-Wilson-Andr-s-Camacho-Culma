@@ -8,12 +8,14 @@ import {
   Stats,
 } from '../types';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 class ApiService {
   private api: AxiosInstance;
 
   constructor() {
     this.api = axios.create({
-      baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+      baseURL: API_BASE_URL,
       timeout: 10000,
     });
 
@@ -43,6 +45,16 @@ class ApiService {
   // ============================================
   // AUTH
   // ============================================
+  getApiBaseUrl(): string {
+    return API_BASE_URL;
+  }
+
+  async warmUp(): Promise<void> {
+    await this.api.get('/api/health', {
+      timeout: 30000,
+    });
+  }
+
   async login(email: string, password: string): Promise<AuthResponse> {
     const response = await this.api.post<AuthResponse>('/api/auth/login', {
       email,

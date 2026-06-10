@@ -62,6 +62,85 @@
   font-weight: 800;
 }
 
+.serverStatus {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  background: #eff6ff;
+}
+
+.serverStatus div {
+  min-width: 0;
+}
+
+.serverStatus strong {
+  display: block;
+  color: #1e3a8a;
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.serverStatus span {
+  display: block;
+  overflow: hidden;
+  margin-top: 0.2rem;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ready {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.ready strong {
+  color: #166534;
+}
+
+.slow {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.slow strong {
+  color: #92400e;
+}
+
+.serverError {
+  border-color: #fecdd3;
+  background: #fff1f2;
+}
+
+.serverError strong {
+  color: #b42335;
+}
+
+.warmupBtn {
+  min-height: 34px;
+  flex: 0 0 auto;
+  padding: 0 0.75rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1d4ed8;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.warmupBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 .error {
   margin-bottom: 1rem;
   padding: 0.9rem 1rem;
@@ -261,5 +340,15 @@
 
   .credentialRow code {
     min-width: 0;
+  }
+
+  .serverStatus {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .warmupBtn {
+    width: 100%;
   }
 }
