@@ -25,10 +25,11 @@ Matriz actual:
 | Ver estudiantes | Todos | Solo su sede |
 | Crear estudiantes | Si | Solo en su sede |
 | Editar estudiantes | Si | No |
+| Desactivar estudiantes | Si | No |
 | Eliminar estudiantes | Si | No |
 | Estadisticas | Si | No |
 
-El frontend oculta la columna `Acciones` para OPERADOR, pero la proteccion importante esta en backend: `PUT /api/estudiantes/:id` y `DELETE /api/estudiantes/:id` usan `AdminGuard`.
+El frontend oculta la columna `Acciones` para OPERADOR, pero la proteccion importante esta en backend: `PUT /api/estudiantes/:id`, `PATCH /api/estudiantes/:id/desactivar` y `DELETE /api/estudiantes/:id` usan `AdminGuard`.
 
 ## Validacion de entradas
 

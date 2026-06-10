@@ -201,6 +201,7 @@ Estudiantes:
 - `GET /api/estudiantes/:id`
 - `POST /api/estudiantes` - autenticado; OPERADOR solo en su sede
 - `PUT /api/estudiantes/:id` - solo ADMIN
+- `PATCH /api/estudiantes/:id/desactivar` - solo ADMIN, cambia `estado` a `INACTIVO`
 - `DELETE /api/estudiantes/:id` - solo ADMIN, soft delete
 
 Estadisticas:
@@ -231,3 +232,32 @@ git add .
 git commit -m "fix: reforzar permisos y documentacion"
 git push origin main
 ```
+
+## 10. Verificar desactivacion de estudiante
+
+Ejemplo PowerShell contra la API desplegada:
+
+```powershell
+$login = Invoke-RestMethod `
+  -Method POST `
+  -Uri "https://dna-music-api-j323.onrender.com/api/auth/login" `
+  -ContentType "application/json" `
+  -Body '{"email":"admin@dnamusic.co","password":"Admin123!"}'
+
+$token = $login.access_token
+$id = "ID_DEL_ESTUDIANTE"
+
+Invoke-RestMethod `
+  -Method PATCH `
+  -Uri "https://dna-music-api-j323.onrender.com/api/estudiantes/$id/desactivar" `
+  -Headers @{ Authorization = "Bearer $token" }
+
+$estudiantes = Invoke-RestMethod `
+  -Method GET `
+  -Uri "https://dna-music-api-j323.onrender.com/api/estudiantes" `
+  -Headers @{ Authorization = "Bearer $token" }
+
+$estudiantes.data | Where-Object { $_.id -eq $id }
+```
+
+Resultado esperado: el estudiante queda con `estado: INACTIVO`. Esta es una desactivacion logica: conserva el registro y permite auditoria del cambio.
