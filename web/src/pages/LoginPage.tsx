@@ -77,8 +77,7 @@ export const LoginPage: React.FC = () => {
       if (serverStatus !== 'ready') {
         const serverReady = await warmUpServer();
         if (!serverReady) {
-          setError('El servidor de demo aun no responde. Espera unos segundos y vuelve a intentar.');
-          return;
+          setError('No se pudo verificar el estado del servidor, pero intentaremos iniciar sesion directamente.');
         }
       }
 

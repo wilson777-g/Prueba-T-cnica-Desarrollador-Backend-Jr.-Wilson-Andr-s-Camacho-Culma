@@ -52,6 +52,7 @@ class ApiService {
   async warmUp(): Promise<void> {
     await this.api.get('/api/health', {
       timeout: 30000,
+      validateStatus: status => status < 500,
     });
   }
 
