@@ -2,7 +2,13 @@ import React, { useEffect, useState } from 'react';
 import apiService from '../services/api';
 import styles from '../styles/Auth.module.css';
 
-type ServerStatus = 'checking' | 'ready' | 'slow' | 'error';
+const warmUpServer = async () => {
+  try {
+    await apiService.warmUp();
+  } catch {
+    // Render can take a few seconds to wake up; login will surface a friendly message if it still fails.
+  }
+};
 
 export const LoginPage: React.FC = () => {
   const demoPasswordMask = '********';
@@ -11,8 +17,6 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [copiedField, setCopiedField] = useState('');
-  const [serverStatus, setServerStatus] = useState<ServerStatus>('checking');
-  const serverStatusClass = serverStatus === 'error' ? styles.serverError : styles[serverStatus];
 
   const credentials = [
     {
@@ -29,45 +33,8 @@ export const LoginPage: React.FC = () => {
     },
   ];
 
-  const warmUpServer = async () => {
-    setServerStatus('checking');
-
-    try {
-      await apiService.warmUp();
-      setServerStatus('ready');
-      return true;
-    } catch {
-      setServerStatus('error');
-      return false;
-    }
-  };
-
   useEffect(() => {
-    let active = true;
-    const timeoutId = window.setTimeout(() => {
-      if (active) {
-        setServerStatus('slow');
-      }
-    }, 3500);
-
-    apiService
-      .warmUp()
-      .then(() => {
-        if (active) {
-          setServerStatus('ready');
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setServerStatus('error');
-        }
-      })
-      .finally(() => window.clearTimeout(timeoutId));
-
-    return () => {
-      active = false;
-      window.clearTimeout(timeoutId);
-    };
+    void warmUpServer();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,13 +43,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      if (serverStatus !== 'ready') {
-        const serverReady = await warmUpServer();
-        if (!serverReady) {
-          setError('No se pudo verificar el estado del servidor, pero intentaremos iniciar sesion directamente.');
-        }
-      }
-
+      await warmUpServer();
       await apiService.login(email, password);
       window.location.href = '/';
     } catch (err: any) {
@@ -107,20 +68,6 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const serverStatusTitle = {
-    ready: 'Servicio conectado',
-    slow: 'Servicio iniciando',
-    error: 'Servicio en espera',
-    checking: 'Verificando servicio',
-  }[serverStatus];
-
-  const serverStatusDetail = {
-    ready: 'API disponible para iniciar sesion',
-    slow: 'La demo puede tardar unos segundos en responder',
-    error: 'Intenta nuevamente en unos segundos',
-    checking: 'Validando disponibilidad de la demo',
-  }[serverStatus];
-
   return (
     <div className={styles.container}>
       <div className={styles.loginBox}>
@@ -135,16 +82,6 @@ export const LoginPage: React.FC = () => {
         </div>
 
         <h2>Iniciar Sesion</h2>
-
-        <div className={`${styles.serverStatus} ${serverStatusClass}`}>
-          <div>
-            <strong>{serverStatusTitle}</strong>
-            <span>{serverStatusDetail}</span>
-          </div>
-          <button type="button" onClick={warmUpServer} disabled={serverStatus === 'checking'} className={styles.warmupBtn}>
-            {serverStatus === 'checking' ? 'Verificando...' : 'Verificar servicio'}
-          </button>
-        </div>
 
         {error && <div className={styles.error}>{error}</div>}
 
