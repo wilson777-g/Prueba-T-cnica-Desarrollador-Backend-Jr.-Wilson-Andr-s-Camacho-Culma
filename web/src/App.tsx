@@ -18,13 +18,13 @@ function App() {
     return <div style={{ textAlign: 'center', padding: '2rem' }}>Cargando...</div>;
   }
 
+  const loginRoute = isAuthenticated ? <Navigate to="/" /> : <LoginPage />;
+
   return (
     <Router>
       <Routes>
-        <Route
-          path="/login"
-          element={isAuthenticated ? <Navigate to="/" /> : <LoginPage />}
-        />
+        <Route path="/login" element={loginRoute} />
+        <Route path="/login.html" element={loginRoute} />
         <Route
           path="/"
           element={
