@@ -12,8 +12,8 @@ const warmUpServer = async () => {
 
 export const LoginPage: React.FC = () => {
   const demoPasswordMask = '********';
-  const [email, setEmail] = useState('admin@dnamusic.co');
-  const [password, setPassword] = useState('Admin123!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [copiedField, setCopiedField] = useState('');
@@ -90,9 +90,11 @@ export const LoginPage: React.FC = () => {
             <label htmlFor="email">Email</label>
             <input
               id="email"
+              name="email"
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
+              autoComplete="username"
               required
               disabled={loading}
             />
@@ -102,9 +104,11 @@ export const LoginPage: React.FC = () => {
             <label htmlFor="password">Contrasena</label>
             <input
               id="password"
+              name="password"
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
+              autoComplete="current-password"
               required
               disabled={loading}
             />
