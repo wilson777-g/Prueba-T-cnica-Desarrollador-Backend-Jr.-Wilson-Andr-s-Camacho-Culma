@@ -12,17 +12,18 @@ export const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [copiedField, setCopiedField] = useState('');
   const [serverStatus, setServerStatus] = useState<ServerStatus>('checking');
-  const apiUrl = apiService.getApiBaseUrl();
   const serverStatusClass = serverStatus === 'error' ? styles.serverError : styles[serverStatus];
 
   const credentials = [
     {
       role: 'ADMIN',
+      roleLabel: 'Rol administrador',
       email: 'admin@dnamusic.co',
       password: 'Admin123!',
     },
     {
       role: 'OPERADOR',
+      roleLabel: 'Rol operador',
       email: 'operador.bog@dnamusic.co',
       password: 'Oper123!',
     },
@@ -85,7 +86,13 @@ export const LoginPage: React.FC = () => {
       await apiService.login(email, password);
       window.location.href = '/';
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error en el login');
+      const statusCode = err.response?.status;
+
+      if (!statusCode || statusCode >= 500) {
+        setError('El servicio esta iniciando. Intenta nuevamente en unos segundos.');
+      } else {
+        setError('No fue posible iniciar sesion. Revisa las credenciales e intenta nuevamente.');
+      }
     } finally {
       setLoading(false);
     }
@@ -96,9 +103,23 @@ export const LoginPage: React.FC = () => {
       await navigator.clipboard.writeText(value);
       setCopiedField(field);
     } catch {
-      setError('No se pudo copiar el dato. Copialo manualmente.');
+      setError('No se pudo copiar automaticamente. Intenta nuevamente.');
     }
   };
+
+  const serverStatusTitle = {
+    ready: 'Servicio conectado',
+    slow: 'Servicio iniciando',
+    error: 'Servicio en espera',
+    checking: 'Verificando servicio',
+  }[serverStatus];
+
+  const serverStatusDetail = {
+    ready: 'API disponible para iniciar sesion',
+    slow: 'La demo puede tardar unos segundos en responder',
+    error: 'Intenta nuevamente en unos segundos',
+    checking: 'Validando disponibilidad de la demo',
+  }[serverStatus];
 
   return (
     <div className={styles.container}>
@@ -117,19 +138,11 @@ export const LoginPage: React.FC = () => {
 
         <div className={`${styles.serverStatus} ${serverStatusClass}`}>
           <div>
-            <strong>
-              {serverStatus === 'ready'
-                ? 'Servidor listo'
-                : serverStatus === 'slow'
-                  ? 'Despertando servidor'
-                  : serverStatus === 'error'
-                    ? 'Servidor en espera'
-                    : 'Preparando servidor'}
-            </strong>
-            <span>{apiUrl}</span>
+            <strong>{serverStatusTitle}</strong>
+            <span>{serverStatusDetail}</span>
           </div>
           <button type="button" onClick={warmUpServer} disabled={serverStatus === 'checking'} className={styles.warmupBtn}>
-            {serverStatus === 'checking' ? 'Verificando...' : 'Activar API'}
+            {serverStatus === 'checking' ? 'Verificando...' : 'Verificar servicio'}
           </button>
         </div>
 
@@ -167,18 +180,23 @@ export const LoginPage: React.FC = () => {
 
         <div className={styles.testCreds}>
           <div className={styles.credsHeader}>
-            <h3>Credenciales demo para evaluacion tecnica</h3>
+            <div>
+              <h3>Acceso demo para evaluacion tecnica</h3>
+              <p>Credenciales disponibles para prueba controlada</p>
+            </div>
             <span>Copiar y pegar</span>
           </div>
 
           <div className={styles.credsList}>
             {credentials.map(credential => (
               <div key={credential.role} className={styles.credentialCard}>
-                <strong>{credential.role}</strong>
+                <strong>{credential.roleLabel}</strong>
 
                 <div className={styles.credentialRow}>
-                  <span>Usuario demo</span>
-                  <code>{credential.email}</code>
+                  <span>Usuario</span>
+                  <div className={styles.credentialValue}>
+                    <code>{credential.email}</code>
+                  </div>
                   <button
                     type="button"
                     onClick={() => copyCredential(credential.email, `${credential.role}-email`)}
@@ -189,8 +207,11 @@ export const LoginPage: React.FC = () => {
                 </div>
 
                 <div className={styles.credentialRow}>
-                  <span>Contrasena demo oculta por seguridad</span>
-                  <code aria-label="Contrasena demo oculta">{demoPasswordMask}</code>
+                  <span>Contrasena</span>
+                  <div className={styles.credentialValue}>
+                    <code aria-label="Contrasena demo oculta">{demoPasswordMask}</code>
+                    <small>Oculta por seguridad</small>
+                  </div>
                   <button
                     type="button"
                     onClick={() => copyCredential(credential.password, `${credential.role}-password`)}

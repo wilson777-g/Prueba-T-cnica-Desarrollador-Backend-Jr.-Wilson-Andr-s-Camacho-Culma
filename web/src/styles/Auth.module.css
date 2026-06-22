@@ -225,7 +225,7 @@
 
 .credsHeader {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 0.9rem;
@@ -236,6 +236,13 @@
   color: #1f2937;
   font-size: 0.98rem;
   font-weight: 900;
+}
+
+.credsHeader p {
+  margin: 0.25rem 0 0;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .credsHeader span {
@@ -267,7 +274,7 @@
 
 .credentialRow {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) auto;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.55rem;
 }
@@ -282,13 +289,26 @@
   font-weight: 800;
 }
 
-.credentialRow code {
+.credentialValue {
+  min-width: 0;
+}
+
+.credentialValue code {
+  display: block;
   overflow: hidden;
   color: #1f2937;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.82rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.credentialValue small {
+  display: block;
+  margin-top: 0.18rem;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .copyBtn {
@@ -338,7 +358,7 @@
     grid-column: 1 / -1;
   }
 
-  .credentialRow code {
+  .credentialValue code {
     min-width: 0;
   }
 
