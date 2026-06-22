@@ -5,6 +5,7 @@ import styles from '../styles/Auth.module.css';
 type ServerStatus = 'checking' | 'ready' | 'slow' | 'error';
 
 export const LoginPage: React.FC = () => {
+  const demoPasswordMask = '********';
   const [email, setEmail] = useState('admin@dnamusic.co');
   const [password, setPassword] = useState('Admin123!');
   const [error, setError] = useState('');
@@ -166,7 +167,7 @@ export const LoginPage: React.FC = () => {
 
         <div className={styles.testCreds}>
           <div className={styles.credsHeader}>
-            <h3>Credenciales de prueba</h3>
+            <h3>Credenciales demo para evaluacion tecnica</h3>
             <span>Copiar y pegar</span>
           </div>
 
@@ -176,7 +177,7 @@ export const LoginPage: React.FC = () => {
                 <strong>{credential.role}</strong>
 
                 <div className={styles.credentialRow}>
-                  <span>Email</span>
+                  <span>Usuario demo</span>
                   <code>{credential.email}</code>
                   <button
                     type="button"
@@ -188,8 +189,8 @@ export const LoginPage: React.FC = () => {
                 </div>
 
                 <div className={styles.credentialRow}>
-                  <span>Clave</span>
-                  <code>{credential.password}</code>
+                  <span>Contrasena demo oculta por seguridad</span>
+                  <code aria-label="Contrasena demo oculta">{demoPasswordMask}</code>
                   <button
                     type="button"
                     onClick={() => copyCredential(credential.password, `${credential.role}-password`)}
