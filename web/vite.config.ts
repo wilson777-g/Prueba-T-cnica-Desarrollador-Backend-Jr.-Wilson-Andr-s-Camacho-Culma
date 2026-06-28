@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 const fromRoot = (path: string) =>
-  new URL(path, import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
+  decodeURIComponent(new URL(path, import.meta.url).pathname).replace(/^\/([A-Za-z]:)/, '$1');
 
 export default defineConfig({
   plugins: [react()],

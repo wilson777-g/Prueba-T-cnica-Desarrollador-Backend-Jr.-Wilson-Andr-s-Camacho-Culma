@@ -6,7 +6,7 @@ const warmUpServer = async () => {
   try {
     await apiService.warmUp();
   } catch {
-    // Render can take a few seconds to wake up; login will surface a friendly message if it still fails.
+    // El backend puede tardar unos segundos en responder; el login mostrara el error si persiste.
   }
 };
 
@@ -22,14 +22,14 @@ export const LoginPage: React.FC = () => {
     {
       role: 'ADMIN',
       roleLabel: 'Rol administrador',
-      email: 'admin@dnamusic.co',
-      password: 'Admin123!',
+      email: 'admin@example.test',
+      password: 'DemoAdmin123!',
     },
     {
       role: 'OPERADOR',
       roleLabel: 'Rol operador',
-      email: 'operador.bog@dnamusic.co',
-      password: 'Oper123!',
+      email: 'operador.bogota@example.test',
+      password: 'DemoOper123!',
     },
   ];
 
@@ -73,10 +73,10 @@ export const LoginPage: React.FC = () => {
       <div className={styles.loginBox}>
         <div className={styles.brandHeader}>
           <div className={styles.brandMark} aria-hidden="true">
-            DN
+            SG
           </div>
           <div>
-            <h1 className={styles.title}>DNA Music</h1>
+            <h1 className={styles.title}>Sistema de Gestion Academica</h1>
             <p>Gestion de estudiantes por sede</p>
           </div>
         </div>

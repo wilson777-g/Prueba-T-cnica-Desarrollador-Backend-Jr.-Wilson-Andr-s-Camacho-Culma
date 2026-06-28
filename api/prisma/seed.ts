@@ -51,13 +51,13 @@ async function main() {
     },
   });
 
-  const adminPassword = await bcrypt.hash('Admin123!', 10);
-  const operadorPassword = await bcrypt.hash('Oper123!', 10);
+  const adminPassword = await bcrypt.hash('DemoAdmin123!', 10);
+  const operadorPassword = await bcrypt.hash('DemoOper123!', 10);
 
   await prisma.user.upsert({
-    where: { email: 'admin@dnamusic.co' },
+    where: { email: 'admin@example.test' },
     update: {
-      nombre: 'Administrador DNA Music',
+      nombre: 'Administrador del Sistema',
       password: adminPassword,
       rol: 'ADMIN',
       sedeId: null,
@@ -65,8 +65,8 @@ async function main() {
       deletedAt: null,
     },
     create: {
-      email: 'admin@dnamusic.co',
-      nombre: 'Administrador DNA Music',
+      email: 'admin@example.test',
+      nombre: 'Administrador del Sistema',
       password: adminPassword,
       rol: 'ADMIN',
       activo: true,
@@ -74,7 +74,7 @@ async function main() {
   });
 
   await prisma.user.upsert({
-    where: { email: 'operador.bog@dnamusic.co' },
+    where: { email: 'operador.bogota@example.test' },
     update: {
       nombre: 'Operador Bogota',
       password: operadorPassword,
@@ -84,7 +84,7 @@ async function main() {
       deletedAt: null,
     },
     create: {
-      email: 'operador.bog@dnamusic.co',
+      email: 'operador.bogota@example.test',
       nombre: 'Operador Bogota',
       password: operadorPassword,
       rol: 'OPERADOR',
@@ -94,7 +94,7 @@ async function main() {
   });
 
   await prisma.user.upsert({
-    where: { email: 'operador.med@dnamusic.co' },
+    where: { email: 'operador.medellin@example.test' },
     update: {
       nombre: 'Operador Medellin',
       password: operadorPassword,
@@ -104,7 +104,7 @@ async function main() {
       deletedAt: null,
     },
     create: {
-      email: 'operador.med@dnamusic.co',
+      email: 'operador.medellin@example.test',
       nombre: 'Operador Medellin',
       password: operadorPassword,
       rol: 'OPERADOR',
@@ -183,9 +183,9 @@ async function main() {
 
   console.log('Seed completado.');
   console.log('Credenciales:');
-  console.log('ADMIN: admin@dnamusic.co / Admin123!');
-  console.log('OPERADOR BOG: operador.bog@dnamusic.co / Oper123!');
-  console.log('OPERADOR MED: operador.med@dnamusic.co / Oper123!');
+  console.log('ADMIN: admin@example.test / DemoAdmin123!');
+  console.log('OPERADOR BOGOTA: operador.bogota@example.test / DemoOper123!');
+  console.log('OPERADOR MEDELLIN: operador.medellin@example.test / DemoOper123!');
 }
 
 main()

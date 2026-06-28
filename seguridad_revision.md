@@ -41,7 +41,7 @@ El frontend oculta la columna `Acciones` para OPERADOR, pero la proteccion impor
 ## Headers, CORS y rate limit
 
 - Helmet activo para headers HTTP defensivos.
-- CORS configurable por `CORS_ORIGIN`; en produccion debe apuntar al dominio de Vercel.
+- CORS configurable por `CORS_ORIGIN`; en produccion debe apuntar al dominio publico del frontend.
 - Rate limiting global bajo `/api`.
 
 ## Datos sensibles

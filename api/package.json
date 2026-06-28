@@ -1,7 +1,7 @@
 {
-  "name": "dna-music-api",
+  "name": "academic-management-api",
   "version": "1.0.0",
-  "description": "DNA Music - Backend API para Gestion de Estudiantes",
+  "description": "Backend API para gestion de estudiantes por sede",
   "main": "dist/main.js",
   "scripts": {
     "start": "nest start",

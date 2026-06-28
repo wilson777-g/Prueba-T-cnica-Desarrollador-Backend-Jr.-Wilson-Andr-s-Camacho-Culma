@@ -12,7 +12,7 @@ export class AppController {
     return {
       status: 'ok',
       database: 'ok',
-      service: 'dna-music-api',
+      service: 'academic-management-api',
       timestamp: new Date().toISOString(),
     };
   }

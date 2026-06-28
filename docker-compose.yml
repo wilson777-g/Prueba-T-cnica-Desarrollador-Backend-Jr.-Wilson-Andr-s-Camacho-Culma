@@ -1,15 +1,15 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: dna_music_db
+    container_name: academic_demo_db
     environment:
-      POSTGRES_DB: dna_music
-      POSTGRES_USER: dna_music
-      POSTGRES_PASSWORD: dna_music
+      POSTGRES_DB: academic_demo
+      POSTGRES_USER: academic_demo
+      POSTGRES_PASSWORD: academic_demo
     ports:
       - "5433:5432"
     volumes:
-      - dna_music_pgdata:/var/lib/postgresql/data
+      - academic_demo_pgdata:/var/lib/postgresql/data
 
 volumes:
-  dna_music_pgdata:
+  academic_demo_pgdata:

@@ -31,10 +31,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className={styles.headerContent}>
           <div className={styles.brand}>
             <div className={styles.brandMark} aria-hidden="true">
-              DN
+              SG
             </div>
             <div>
-              <h1 className={styles.logo}>DNA Music</h1>
+              <h1 className={styles.logo}>Sistema de Gestion Academica</h1>
               <span className={styles.logoCaption}>Sistema de Gestion Academica</span>
             </div>
           </div>

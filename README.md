@@ -1,6 +1,6 @@
-# DNA Music - Prueba tecnica Backend Jr.
+# Prueba tecnica Backend Jr - Sistema de Gestion Academica
 
-Mini aplicacion para gestion de estudiantes por sede. El repositorio esta separado en `api/` para el backend NestJS y `web/` para el frontend React.
+Mini aplicacion full-stack para gestion de estudiantes por sede. El repositorio esta separado en `api/` para el backend NestJS y `web/` para el frontend React.
 
 ## Estructura
 
@@ -58,33 +58,38 @@ npm run dev
 URLs locales:
 
 - API: `http://localhost:3000/api`
+- Health check: `http://localhost:3000/api/health`
 - Frontend: `http://localhost:3001`
 
 Nota: el `docker-compose.yml` publica PostgreSQL en el puerto local `5433` para evitar choques con instalaciones locales de PostgreSQL en `5432`.
 
 ## 2. URLs de despliegue
 
-- Backend Render: https://dna-music-api-j323.onrender.com
-- Health check publico: https://dna-music-api-j323.onrender.com/api/health
-- Frontend Vercel: https://dna-music-web.vercel.app
+El despliegue publico no esta configurado en este repositorio.
 
-El frontend despierta automaticamente el backend al abrir el login consultando `GET /api/health`. Ese endpoint tambien ejecuta una consulta simple a PostgreSQL (`SELECT 1`) para validar y calentar la conexion con la base de datos antes de intentar iniciar sesion.
+- Backend: no configurado en este repositorio.
+- Health check publico: no configurado en este repositorio.
+- Frontend: no configurado en este repositorio.
 
-En Vercel, la variable del frontend debe quedar asi:
+Si se configura un ambiente remoto, el frontend debe apuntar a la URL publica de la API con una variable de entorno como esta:
 
 ```bash
-VITE_API_URL=https://dna-music-api-j323.onrender.com
+VITE_API_URL=https://api.example.com
 ```
+
+El frontend consulta `GET /api/health` antes del login para validar disponibilidad del backend. Ese endpoint tambien ejecuta una consulta simple a PostgreSQL (`SELECT 1`) para validar la conexion con la base de datos.
 
 ## 3. Credenciales de prueba
 
-El seed crea estos usuarios de demo:
+El seed crea usuarios de demo con dominios reservados para pruebas:
 
-- ADMIN: `admin@dnamusic.co` / `Admin123!`
-- OPERADOR BOG: `operador.bog@dnamusic.co` / `Oper123!`
-- OPERADOR MED: `operador.med@dnamusic.co` / `Oper123!`
+- ADMIN: `admin@example.test` / `DemoAdmin123!`
+- OPERADOR BOGOTA: `operador.bogota@example.test` / `DemoOper123!`
+- OPERADOR MEDELLIN: `operador.medellin@example.test` / `DemoOper123!`
 
 Tambien crea 3 sedes activas y 6 estudiantes distribuidos entre Bogota, Medellin y Cali.
+
+Estas credenciales son locales/de demo. No deben reutilizarse como credenciales reales de produccion.
 
 ## 4. Decisiones tecnicas
 
@@ -229,32 +234,34 @@ Git:
 ```bash
 git status
 git add .
-git commit -m "fix: reforzar permisos y documentacion"
+git commit -m "fix: limpiar branding y credenciales demo"
 git push origin main
 ```
 
 ## 10. Verificar desactivacion de estudiante
 
-Ejemplo PowerShell contra la API desplegada:
+Ejemplo PowerShell contra una API desplegada. Usa un placeholder para evitar publicar URLs reales dentro del repositorio:
 
 ```powershell
+$API_URL = "https://api.example.com"
+
 $login = Invoke-RestMethod `
   -Method POST `
-  -Uri "https://dna-music-api-j323.onrender.com/api/auth/login" `
+  -Uri "$API_URL/api/auth/login" `
   -ContentType "application/json" `
-  -Body '{"email":"admin@dnamusic.co","password":"Admin123!"}'
+  -Body '{"email":"admin@example.test","password":"DemoAdmin123!"}'
 
 $token = $login.access_token
 $id = "ID_DEL_ESTUDIANTE"
 
 Invoke-RestMethod `
   -Method PATCH `
-  -Uri "https://dna-music-api-j323.onrender.com/api/estudiantes/$id/desactivar" `
+  -Uri "$API_URL/api/estudiantes/$id/desactivar" `
   -Headers @{ Authorization = "Bearer $token" }
 
 $estudiantes = Invoke-RestMethod `
   -Method GET `
-  -Uri "https://dna-music-api-j323.onrender.com/api/estudiantes" `
+  -Uri "$API_URL/api/estudiantes" `
   -Headers @{ Authorization = "Bearer $token" }
 
 $estudiantes.data | Where-Object { $_.id -eq $id }
