@@ -1,6 +1,17 @@
-# Prueba tecnica Backend Jr - Sistema de Gestion Academica
+# Sistema Academico Multi-Sede
 
-Mini aplicacion full-stack para gestion de estudiantes por sede. El repositorio esta separado en `api/` para el backend NestJS y `web/` para el frontend React.
+Aplicacion full-stack en produccion para gestion de estudiantes por sede. El repositorio mantiene una separacion clara entre `api/` para el backend NestJS y `web/` para el frontend React/Vite.
+
+## Demo publica
+
+El usuario final usa una sola URL publica:
+
+- Demo principal: `https://academic-management-web.vercel.app`
+- Verificacion de API via frontend: `https://academic-management-web.vercel.app/api/health`
+- Backend de infraestructura: `https://academic-management-api-35mu.onrender.com`
+- Health directo de infraestructura: `https://academic-management-api-35mu.onrender.com/api/health`
+
+Vercel sirve el frontend y proxyea internamente `/api/*` hacia Render. Por eso el boton publico del demo debe apuntar al frontend, no al backend directo.
 
 ## Estructura
 
@@ -14,13 +25,14 @@ web/                 Frontend React + Vite
   src/
   package.json
   tsconfig.json
+  vercel.json
 analisis_tecnico.md  Respuesta seccion 6
 git_respuestas.md    Respuesta seccion 7
 seguridad_revision.md Revision de seguridad y autorizacion
 README.md            Documentacion principal
 ```
 
-## 1. Como correr localmente
+## Ejecucion local
 
 Requisitos:
 
@@ -61,46 +73,77 @@ URLs locales:
 - Health check: `http://localhost:3000/api/health`
 - Frontend: `http://localhost:3001`
 
-Nota: el `docker-compose.yml` publica PostgreSQL en el puerto local `5433` para evitar choques con instalaciones locales de PostgreSQL en `5432`.
+En desarrollo, Vite proxyea `/api` hacia `http://localhost:3000`. En produccion, Vercel proxyea `/api/*` hacia Render.
 
-## 2. URLs de despliegue
+## Variables de entorno
 
-El despliegue publico no esta configurado en este repositorio.
+Backend Render:
 
-- Backend: no configurado en este repositorio.
-- Health check publico: no configurado en este repositorio.
-- Frontend: no configurado en este repositorio.
-
-Si se configura un ambiente remoto, el frontend debe apuntar a la URL publica de la API con una variable de entorno como esta:
-
-```bash
-VITE_API_URL=https://api.example.com
+```env
+DATABASE_URL=postgresql://...
+JWT_SECRET=valor-largo-y-seguro
+JWT_EXPIRATION=1h
+NODE_ENV=production
+PORT=3000
+CORS_ORIGIN=https://academic-management-web.vercel.app
+DEMO_MODE=true
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
 ```
 
-El frontend consulta `GET /api/health` antes del login para validar disponibilidad del backend. Ese endpoint tambien ejecuta una consulta simple a PostgreSQL (`SELECT 1`) para validar la conexion con la base de datos.
+Frontend Vercel:
 
-## 3. Credenciales de prueba
+```env
+VITE_API_URL=
+VITE_DEMO_MODE=true
+```
 
-El seed crea usuarios de demo con dominios reservados para pruebas:
+`VITE_API_URL` debe quedar vacia o eliminada para usar same-origin. Las llamadas del frontend quedan como `/api/auth/login`, `/api/estudiantes` y `/api/health`.
+
+## Credenciales de prueba
+
+El seed crea usuarios de demo con dominios reservados:
 
 - ADMIN: `admin@example.test` / `DemoAdmin123!`
 - OPERADOR BOGOTA: `operador.bogota@example.test` / `DemoOper123!`
 - OPERADOR MEDELLIN: `operador.medellin@example.test` / `DemoOper123!`
 
-Tambien crea 3 sedes activas y 6 estudiantes distribuidos entre Bogota, Medellin y Cali.
+Tambien crea 3 sedes activas y 18 estudiantes distribuidos entre Bogota, Medellin y Cali, con estados `ACTIVO`, `INACTIVO` y `RETIRADO`.
 
-Estas credenciales son locales/de demo. No deben reutilizarse como credenciales reales de produccion.
+Estas credenciales son de demo. No deben reutilizarse como credenciales reales de produccion.
 
-## 4. Decisiones tecnicas
+## Modo demo publico
 
-- Backend con NestJS por su estructura modular, guards, pipes de validacion y separacion clara entre controladores, servicios y modulos.
+Con `DEMO_MODE=true`, el backend bloquea `DELETE /api/estudiantes/:id` y responde:
+
+```json
+{
+  "message": "Operacion deshabilitada en demo publica"
+}
+```
+
+En modo demo se mantiene permitido:
+
+- login
+- listar y filtrar estudiantes
+- crear estudiantes
+- editar estudiantes
+- suspender estudiantes
+
+El frontend usa `VITE_DEMO_MODE=true` para mostrar un aviso discreto y deshabilitar la accion de eliminar. Esta limitacion es solo de experiencia de usuario; la regla real vive en el backend.
+
+## Decisiones tecnicas
+
+- Backend con NestJS por su estructura modular, guards, pipes de validacion y separacion entre controladores, servicios y modulos.
 - Prisma como ORM para tipado fuerte, modelo declarativo y consultas agregadas.
-- PostgreSQL como base principal porque era el motor preferido en la prueba.
-- Frontend con React + Vite, separado del backend, con login, listado, filtros, paginacion y formulario de estudiantes.
-- La autorizacion real vive en backend. El frontend solo oculta acciones para mejorar UX, pero los endpoints siguen validando rol y sede.
-- Se usa soft delete para estudiantes mediante `deletedAt`, evitando eliminacion fisica accidental.
+- PostgreSQL como base principal.
+- Frontend con React + Vite, login, listado, filtros, paginacion, formularios y acciones administrativas.
+- Autorizacion real en backend. El frontend solo oculta o deshabilita acciones para mejorar UX.
+- URL publica unica mediante proxy de Vercel sobre `/api/*`.
+- Soft delete para estudiantes mediante `deletedAt`, evitando eliminacion fisica accidental.
+- Suspension profesional de estudiantes mediante estado `INACTIVO`, manteniendo el registro visible para auditoria.
 
-## 5. Seguridad y autorizacion
+## Seguridad y autorizacion
 
 Implementado:
 
@@ -108,12 +151,10 @@ Implementado:
 - JWT firmado con `JWT_SECRET` y expiracion configurable.
 - Guards para rutas autenticadas y rutas exclusivas de ADMIN.
 - `POST /api/auth/register`, CRUD de sedes y estadisticas protegidos para ADMIN.
-- `PUT /api/estudiantes/:id` y `DELETE /api/estudiantes/:id` protegidos para ADMIN.
-- OPERADOR no ve columna `Acciones` en frontend y tampoco puede editar/eliminar estudiantes por API.
+- `PUT /api/estudiantes/:id`, `PATCH /api/estudiantes/:id/suspender`, `PATCH /api/estudiantes/:id/desactivar` y `DELETE /api/estudiantes/:id` protegidos para ADMIN.
+- OPERADOR no ve columna `Acciones` en frontend y tampoco puede editar, suspender, desactivar o eliminar estudiantes por API.
 - OPERADOR solo lista, consulta y crea estudiantes en su propia sede.
 - ADMIN puede ver todas las sedes y estudiantes.
-- Mensaje generico en login: no diferencia email inexistente, password incorrecto, usuario inactivo o bloqueo.
-- Comparacion contra hash dummy cuando el email no existe, para reducir diferencias de timing.
 - Bloqueo temporal tras 5 intentos fallidos.
 - Helmet, CORS configurable y rate limiting global bajo `/api`.
 - `ValidationPipe` global con `whitelist`, `forbidNonWhitelisted` y transformacion de tipos.
@@ -122,7 +163,7 @@ Implementado:
 Pendiente con mas tiempo:
 
 - Refresh tokens con rotacion y revocacion.
-- Cookies `httpOnly` + `secure` + `sameSite` en vez de `localStorage` para el token del frontend.
+- Cookies `httpOnly`, `secure` y `sameSite` en vez de `localStorage` para el token del frontend.
 - Rate limit especifico por email/IP en `/auth/login`.
 - Auditoria de cambios por usuario.
 - Logs estructurados con request id.
@@ -130,16 +171,7 @@ Pendiente con mas tiempo:
 
 Mas detalle en `seguridad_revision.md`.
 
-## 6. Que haria diferente con mas tiempo
-
-- Tests unitarios e integracion con una base de datos de prueba.
-- Swagger/OpenAPI para documentar contratos.
-- Paginacion y busqueda tambien en sedes y usuarios.
-- Soft delete para sedes con reglas mas explicitas para usuarios relacionados.
-- Pipeline de CI que ejecute build, lint y tests.
-- Despliegue automatizado con variables por ambiente.
-
-## 7. Diagrama de base de datos
+## Modelo de datos
 
 ```text
 Sede
@@ -184,7 +216,7 @@ Relaciones:
 - Una sede tiene muchos estudiantes.
 - Un estudiante pertenece a una sede.
 
-## 8. Endpoints principales
+## Endpoints principales
 
 Auth:
 
@@ -206,19 +238,25 @@ Estudiantes:
 - `GET /api/estudiantes/:id`
 - `POST /api/estudiantes` - autenticado; OPERADOR solo en su sede
 - `PUT /api/estudiantes/:id` - solo ADMIN
-- `PATCH /api/estudiantes/:id/desactivar` - solo ADMIN, cambia `estado` a `INACTIVO`
-- `DELETE /api/estudiantes/:id` - solo ADMIN, soft delete
+- `PATCH /api/estudiantes/:id/suspender` - solo ADMIN, cambia `estado` a `INACTIVO`
+- `PATCH /api/estudiantes/:id/desactivar` - solo ADMIN, endpoint compatible heredado
+- `DELETE /api/estudiantes/:id` - solo ADMIN, soft delete; bloqueado con `DEMO_MODE=true`
 
 Estadisticas:
 
 - `GET /api/stats` - solo ADMIN
 
-## 9. Comandos utiles de verificacion
+Health:
+
+- `GET /api/health`
+
+## Comandos de validacion
 
 Backend:
 
 ```bash
 cd api
+npm install
 npm run build
 ```
 
@@ -226,24 +264,16 @@ Frontend:
 
 ```bash
 cd web
+npm install
 npm run build
 ```
 
-Git:
+## Verificar suspension de estudiante
 
-```bash
-git status
-git add .
-git commit -m "fix: limpiar branding y credenciales demo"
-git push origin main
-```
-
-## 10. Verificar desactivacion de estudiante
-
-Ejemplo PowerShell contra una API desplegada. Usa un placeholder para evitar publicar URLs reales dentro del repositorio:
+Ejemplo PowerShell contra la URL unica del frontend:
 
 ```powershell
-$API_URL = "https://api.example.com"
+$API_URL = "https://academic-management-web.vercel.app"
 
 $login = Invoke-RestMethod `
   -Method POST `
@@ -256,7 +286,7 @@ $id = "ID_DEL_ESTUDIANTE"
 
 Invoke-RestMethod `
   -Method PATCH `
-  -Uri "$API_URL/api/estudiantes/$id/desactivar" `
+  -Uri "$API_URL/api/estudiantes/$id/suspender" `
   -Headers @{ Authorization = "Bearer $token" }
 
 $estudiantes = Invoke-RestMethod `
@@ -267,4 +297,4 @@ $estudiantes = Invoke-RestMethod `
 $estudiantes.data | Where-Object { $_.id -eq $id }
 ```
 
-Resultado esperado: el estudiante queda con `estado: INACTIVO`. Esta es una desactivacion logica: conserva el registro y permite auditoria del cambio.
+Resultado esperado: el estudiante queda con `estado: INACTIVO`. La suspension conserva el registro y permite auditoria.

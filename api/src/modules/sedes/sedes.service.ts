@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSedeDto, UpdateSedeDto } from './dto/sede.dto';
+import { AuthenticatedUser } from '../../types/authenticated-user';
 
 @Injectable()
 export class SedesService {
@@ -25,9 +26,21 @@ export class SedesService {
     }
   }
 
-  async findAll(user: any) {
+  async findAll(user: AuthenticatedUser) {
+    let where: Prisma.SedeWhereInput | undefined;
+
+    if (user.rol === 'OPERADOR') {
+      const sedeId = user.sedeId;
+
+      if (!sedeId) {
+        throw new ForbiddenException('El operador no tiene sede asignada');
+      }
+
+      where = { id: sedeId };
+    }
+
     return this.prisma.sede.findMany({
-      where: user.rol === 'OPERADOR' ? { id: user.sedeId } : undefined,
+      where,
       orderBy: { createdAt: 'desc' },
       include: {
         _count: {
@@ -37,7 +50,7 @@ export class SedesService {
     });
   }
 
-  async findById(id: string, user?: any) {
+  async findById(id: string, user?: AuthenticatedUser) {
     if (user?.rol === 'OPERADOR' && user.sedeId !== id) {
       throw new ForbiddenException('No puedes consultar sedes de otros operadores');
     }
@@ -81,7 +94,7 @@ export class SedesService {
   }
 
   async update(id: string, updateSedeDto: UpdateSedeDto) {
-    await this.findById(id, { rol: 'ADMIN' });
+    await this.findById(id);
 
     try {
       return await this.prisma.sede.update({
@@ -102,7 +115,7 @@ export class SedesService {
   }
 
   async delete(id: string) {
-    await this.findById(id, { rol: 'ADMIN' });
+    await this.findById(id);
 
     const deleted = await this.prisma.sede.update({
       where: { id },

@@ -20,6 +20,7 @@ import { AppController } from './app.controller';
         PORT: Joi.number().default(3000),
         NODE_ENV: Joi.string().valid('development', 'test', 'production').default('development'),
         CORS_ORIGIN: Joi.string().default('http://localhost:3001'),
+        DEMO_MODE: Joi.string().valid('true', 'false').default('false'),
         RATE_LIMIT_WINDOW_MS: Joi.number().default(900000),
         RATE_LIMIT_MAX_REQUESTS: Joi.number().default(100),
       }),

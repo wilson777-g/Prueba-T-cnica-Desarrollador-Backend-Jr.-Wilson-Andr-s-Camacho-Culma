@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import apiService from '../services/api';
-import { Estudiante, Pagination, Sede, User } from '../types';
+import { CreateEstudianteDTO, Estudiante, Pagination, Sede, User } from '../types';
 import styles from '../styles/Estudiantes.module.css';
 
 const initialPagination: Pagination = {
@@ -8,6 +8,33 @@ const initialPagination: Pagination = {
   limit: 10,
   total: 0,
   totalPages: 1,
+};
+
+const isDemoMode = import.meta.env.VITE_DEMO_MODE?.trim().toLowerCase() === 'true';
+
+type ApiErrorResponse = {
+  response?: {
+    data?: {
+      message?: string | string[];
+    };
+  };
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  const message = (error as ApiErrorResponse).response?.data?.message;
+
+  if (Array.isArray(message)) {
+    return message.join('. ');
+  }
+
+  return message || fallback;
+};
+
+const getSuspendDisabledLabel = (estado: Estudiante['estado']) =>
+  estado === 'INACTIVO' ? 'Ya inactivo' : 'Retirado';
+
+type EstudianteFormData = CreateEstudianteDTO & {
+  estado: Estudiante['estado'];
 };
 
 export const EstudiantesPage: React.FC = () => {
@@ -20,14 +47,16 @@ export const EstudiantesPage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingEstudianteId, setEditingEstudianteId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Estudiante | null>(null);
+  const [suspendTarget, setSuspendTarget] = useState<Estudiante | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [suspending, setSuspending] = useState(false);
   const [selectedSede, setSelectedSede] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
   const [page, setPage] = useState(1);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<EstudianteFormData>({
     nombreCompleto: '',
     email: '',
     telefono: '',
@@ -174,11 +203,20 @@ export const EstudiantesPage: React.FC = () => {
   };
 
   const handleDeleteEstudiante = async (estudiante: Estudiante) => {
-    if (!isAdmin) {
+    if (!isAdmin || isDemoMode) {
       return;
     }
 
     setDeleteTarget(estudiante);
+    setError('');
+  };
+
+  const handleSuspendEstudiante = (estudiante: Estudiante) => {
+    if (!isAdmin || estudiante.estado !== 'ACTIVO') {
+      return;
+    }
+
+    setSuspendTarget(estudiante);
     setError('');
   };
 
@@ -194,11 +232,30 @@ export const EstudiantesPage: React.FC = () => {
       setPage(current => (current > 1 && estudiantes.length === 1 ? current - 1 : current));
       setRefreshKey(current => current + 1);
       setDeleteTarget(null);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al eliminar estudiante');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Error al eliminar estudiante'));
       setDeleteTarget(null);
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleConfirmSuspend = async () => {
+    if (!isAdmin || !suspendTarget) {
+      return;
+    }
+
+    try {
+      setSuspending(true);
+      await apiService.suspenderEstudiante(suspendTarget.id);
+      setError('');
+      setRefreshKey(current => current + 1);
+      setSuspendTarget(null);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Error al suspender estudiante'));
+      setSuspendTarget(null);
+    } finally {
+      setSuspending(false);
     }
   };
 
@@ -239,8 +296,8 @@ export const EstudiantesPage: React.FC = () => {
       setShowForm(false);
       setPage(1);
       setRefreshKey(current => current + 1);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al guardar estudiante');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Error al guardar estudiante'));
     }
   };
 
@@ -253,6 +310,12 @@ export const EstudiantesPage: React.FC = () => {
       <h2>Gestion de Estudiantes</h2>
 
       {error && <div className={styles.error}>{error}</div>}
+
+      {isDemoMode && (
+        <div className={styles.demoNotice}>
+          Demo publica: algunas acciones destructivas estan limitadas.
+        </div>
+      )}
 
       <div className={styles.controlsSection}>
         <div className={styles.filters}>
@@ -423,13 +486,40 @@ export const EstudiantesPage: React.FC = () => {
                         >
                           Editar
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteEstudiante(estudiante)}
-                          className={`${styles.btnAction} ${styles.btnDelete}`}
-                        >
-                          Eliminar
-                        </button>
+                        {estudiante.estado === 'ACTIVO' ? (
+                          <button
+                            type="button"
+                            onClick={() => handleSuspendEstudiante(estudiante)}
+                            className={`${styles.btnAction} ${styles.btnSuspend}`}
+                          >
+                            Suspender
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className={`${styles.btnAction} ${styles.btnDisabled}`}
+                            disabled
+                          >
+                            {getSuspendDisabledLabel(estudiante.estado)}
+                          </button>
+                        )}
+                        {isDemoMode ? (
+                          <button
+                            type="button"
+                            className={`${styles.btnAction} ${styles.btnDisabled}`}
+                            disabled
+                          >
+                            Demo sin eliminar
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteEstudiante(estudiante)}
+                            className={`${styles.btnAction} ${styles.btnDelete}`}
+                          >
+                            Eliminar
+                          </button>
+                        )}
                       </div>
                     </td>
                   )}
@@ -467,6 +557,47 @@ export const EstudiantesPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {suspendTarget && (
+        <div className={styles.modalOverlay} role="presentation">
+          <div
+            className={styles.confirmModal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="suspend-title"
+          >
+            <div className={`${styles.modalIcon} ${styles.modalIconWarning}`} aria-hidden="true">
+              !
+            </div>
+            <div className={styles.modalContent}>
+              <span className={styles.modalEyebrow}>Confirmar suspension</span>
+              <h3 id="suspend-title">Suspender estudiante</h3>
+              <p>
+                Esta accion cambiara el estado de <strong>{suspendTarget.nombreCompleto}</strong> a INACTIVO. El
+                registro seguira visible para auditoria.
+              </p>
+            </div>
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                onClick={() => setSuspendTarget(null)}
+                className={styles.btnModalSecondary}
+                disabled={suspending}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmSuspend}
+                className={styles.btnModalWarning}
+                disabled={suspending}
+              >
+                {suspending ? 'Suspendiendo...' : 'Suspender'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {deleteTarget && (
         <div className={styles.modalOverlay} role="presentation">

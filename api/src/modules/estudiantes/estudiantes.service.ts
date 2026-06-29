@@ -1,13 +1,18 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEstudianteDto, FilterEstudiantesDto, UpdateEstudianteDto } from './dto/estudiante.dto';
+import { AuthenticatedUser } from '../../types/authenticated-user';
 
 @Injectable()
 export class EstudiantesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+  ) {}
 
-  async create(createEstudianteDto: CreateEstudianteDto, user: any) {
+  async create(createEstudianteDto: CreateEstudianteDto, user: AuthenticatedUser) {
     this.assertOperatorHasSede(user);
 
     const sede = await this.prisma.sede.findUnique({
@@ -47,7 +52,7 @@ export class EstudiantesService {
     }
   }
 
-  async findAll(filters: FilterEstudiantesDto, user: any) {
+  async findAll(filters: FilterEstudiantesDto, user: AuthenticatedUser) {
     this.assertOperatorHasSede(user);
 
     const page = this.parsePositiveInt(filters.page, 1);
@@ -59,6 +64,10 @@ export class EstudiantesService {
     };
 
     if (user.rol === 'OPERADOR') {
+      if (!user.sedeId) {
+        throw new ForbiddenException('El operador no tiene sede asignada');
+      }
+
       where.sedeId = user.sedeId;
     } else if (filters.sedeId) {
       where.sedeId = filters.sedeId;
@@ -99,7 +108,7 @@ export class EstudiantesService {
     };
   }
 
-  async findById(id: string, user: any) {
+  async findById(id: string, user: AuthenticatedUser) {
     this.assertOperatorHasSede(user);
 
     const estudiante = await this.prisma.estudiante.findUnique({
@@ -118,7 +127,7 @@ export class EstudiantesService {
     return estudiante;
   }
 
-  async update(id: string, updateEstudianteDto: UpdateEstudianteDto, user: any) {
+  async update(id: string, updateEstudianteDto: UpdateEstudianteDto, user: AuthenticatedUser) {
     await this.findById(id, user);
 
     try {
@@ -141,30 +150,19 @@ export class EstudiantesService {
     }
   }
 
-  async desactivar(id: string, user: any) {
-    const estudiante = await this.findById(id, user);
-
-    if (estudiante.estado === 'INACTIVO') {
-      throw new BadRequestException('El estudiante ya esta inactivo');
-    }
-
-    if (estudiante.estado !== 'ACTIVO') {
-      throw new BadRequestException(`No se puede desactivar un estudiante en estado ${estudiante.estado}`);
-    }
-
-    const estudianteDesactivado = await this.prisma.estudiante.update({
-      where: { id },
-      data: { estado: 'INACTIVO' },
-      include: { sede: true },
-    });
-
-    return {
-      message: 'Estudiante desactivado correctamente',
-      estudiante: estudianteDesactivado,
-    };
+  async desactivar(id: string, user: AuthenticatedUser) {
+    return this.marcarInactivo(id, user, 'desactivar', 'Estudiante desactivado correctamente');
   }
 
-  async delete(id: string, user: any) {
+  async suspender(id: string, user: AuthenticatedUser) {
+    return this.marcarInactivo(id, user, 'suspender', 'Estudiante suspendido correctamente');
+  }
+
+  async delete(id: string, user: AuthenticatedUser) {
+    if (this.configService.get<string>('DEMO_MODE') === 'true') {
+      throw new ForbiddenException('Operacion deshabilitada en demo publica');
+    }
+
     await this.findById(id, user);
 
     const deleted = await this.prisma.estudiante.update({
@@ -179,7 +177,39 @@ export class EstudiantesService {
     };
   }
 
-  private assertOperatorHasSede(user: any) {
+  private async marcarInactivo(
+    id: string,
+    user: AuthenticatedUser,
+    accion: 'desactivar' | 'suspender',
+    successMessage: string,
+  ) {
+    const estudiante = await this.findById(id, user);
+
+    if (estudiante.estado === 'INACTIVO') {
+      throw new BadRequestException('El estudiante ya esta inactivo');
+    }
+
+    if (estudiante.estado === 'RETIRADO') {
+      throw new BadRequestException(`No se puede ${accion} un estudiante retirado`);
+    }
+
+    if (estudiante.estado !== 'ACTIVO') {
+      throw new BadRequestException(`No se puede ${accion} un estudiante en estado ${estudiante.estado}`);
+    }
+
+    const estudianteActualizado = await this.prisma.estudiante.update({
+      where: { id },
+      data: { estado: 'INACTIVO' },
+      include: { sede: true },
+    });
+
+    return {
+      message: successMessage,
+      estudiante: estudianteActualizado,
+    };
+  }
+
+  private assertOperatorHasSede(user: AuthenticatedUser) {
     if (user.rol === 'OPERADOR' && !user.sedeId) {
       throw new ForbiddenException('El operador no tiene sede asignada');
     }

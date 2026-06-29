@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
@@ -114,7 +114,7 @@ export class AuthService {
       },
       {
         subject: user.id,
-        expiresIn: this.configService.getOrThrow<string>('JWT_EXPIRATION') as any,
+        expiresIn: this.configService.getOrThrow<string>('JWT_EXPIRATION') as JwtSignOptions['expiresIn'],
       },
     );
 

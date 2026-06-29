@@ -1,11 +1,12 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuthenticatedUser } from '../../types/authenticated-user';
 
 @Injectable()
 export class StatsService {
   constructor(private prisma: PrismaService) {}
 
-  async getStats(user: any) {
+  async getStats(user: AuthenticatedUser) {
     if (user.rol !== 'ADMIN') {
       throw new ForbiddenException('Solo administradores pueden ver estadisticas');
     }

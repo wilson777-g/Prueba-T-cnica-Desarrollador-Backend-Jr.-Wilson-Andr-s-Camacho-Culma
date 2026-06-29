@@ -10,6 +10,14 @@ const warmUpServer = async () => {
   }
 };
 
+type ApiStatusError = {
+  response?: {
+    status?: number;
+  };
+};
+
+const getStatusCode = (error: unknown) => (error as ApiStatusError).response?.status;
+
 export const LoginPage: React.FC = () => {
   const demoPasswordMask = '********';
   const [email, setEmail] = useState('');
@@ -46,8 +54,8 @@ export const LoginPage: React.FC = () => {
       await warmUpServer();
       await apiService.login(email, password);
       window.location.href = '/';
-    } catch (err: any) {
-      const statusCode = err.response?.status;
+    } catch (err: unknown) {
+      const statusCode = getStatusCode(err);
 
       if (!statusCode || statusCode >= 500) {
         setError('El servicio esta iniciando. Intenta nuevamente en unos segundos.');

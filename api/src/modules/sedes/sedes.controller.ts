@@ -13,6 +13,7 @@ import { SedesService } from './sedes.service';
 import { CreateSedeDto, UpdateSedeDto } from './dto/sede.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { AdminGuard } from '../../guards/admin.guard';
+import { AuthenticatedUser } from '../../types/authenticated-user';
 
 @Controller('sedes')
 @UseGuards(JwtAuthGuard)
@@ -26,12 +27,12 @@ export class SedesController {
   }
 
   @Get()
-  async findAll(@Request() req: { user: any }) {
+  async findAll(@Request() req: { user: AuthenticatedUser }) {
     return this.sedesService.findAll(req.user);
   }
 
   @Get(':id')
-  async findById(@Param('id') id: string, @Request() req: { user: any }) {
+  async findById(@Param('id') id: string, @Request() req: { user: AuthenticatedUser }) {
     return this.sedesService.findById(id, req.user);
   }
 

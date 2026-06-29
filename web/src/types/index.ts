@@ -11,6 +11,19 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface RegisterDTO {
+  nombre: string;
+  email: string;
+  password: string;
+  rol: 'ADMIN' | 'OPERADOR';
+  sedeId?: string;
+}
+
+export interface VerifyResponse {
+  message: string;
+  user: User;
+}
+
 export interface Sede {
   id: string;
   nombre: string;
@@ -48,6 +61,11 @@ export interface EstudiantesResponse {
   pagination: Pagination;
 }
 
+export interface EstudianteActionResponse {
+  message: string;
+  estudiante: Estudiante;
+}
+
 export interface CreateEstudianteDTO {
   nombreCompleto: string;
   email: string;
@@ -55,8 +73,12 @@ export interface CreateEstudianteDTO {
   documento: string;
   programa: string;
   sedeId: string;
-  estado?: string;
+  estado?: Estudiante['estado'];
 }
+
+export type UpdateEstudianteDTO = Partial<
+  Pick<CreateEstudianteDTO, 'nombreCompleto' | 'email' | 'telefono' | 'programa' | 'estado'>
+>;
 
 export interface Stats {
   resumen: {

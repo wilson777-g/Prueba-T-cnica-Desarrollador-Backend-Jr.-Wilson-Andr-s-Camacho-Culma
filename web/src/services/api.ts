@@ -3,12 +3,16 @@ import {
   AuthResponse,
   Sede,
   Estudiante,
+  EstudianteActionResponse,
   CreateEstudianteDTO,
+  RegisterDTO,
   EstudiantesResponse,
   Stats,
+  UpdateEstudianteDTO,
+  VerifyResponse,
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL?.trim() || '';
 
 class ApiService {
   private api: AxiosInstance;
@@ -66,13 +70,13 @@ class ApiService {
     return response.data;
   }
 
-  async register(data: any): Promise<AuthResponse> {
+  async register(data: RegisterDTO): Promise<AuthResponse> {
     const response = await this.api.post<AuthResponse>('/api/auth/register', data);
     return response.data;
   }
 
-  async verify(): Promise<any> {
-    const response = await this.api.post('/api/auth/verify', {});
+  async verify(): Promise<VerifyResponse> {
+    const response = await this.api.post<VerifyResponse>('/api/auth/verify', {});
     return response.data;
   }
 
@@ -107,13 +111,18 @@ class ApiService {
     return response.data;
   }
 
-  async updateEstudiante(id: string, data: any): Promise<Estudiante> {
+  async updateEstudiante(id: string, data: UpdateEstudianteDTO): Promise<Estudiante> {
     const response = await this.api.put<Estudiante>(`/api/estudiantes/${id}`, data);
     return response.data;
   }
 
-  async deleteEstudiante(id: string): Promise<any> {
-    const response = await this.api.delete(`/api/estudiantes/${id}`);
+  async suspenderEstudiante(id: string): Promise<EstudianteActionResponse> {
+    const response = await this.api.patch<EstudianteActionResponse>(`/api/estudiantes/${id}/suspender`);
+    return response.data;
+  }
+
+  async deleteEstudiante(id: string): Promise<EstudianteActionResponse> {
+    const response = await this.api.delete<EstudianteActionResponse>(`/api/estudiantes/${id}`);
     return response.data;
   }
 
