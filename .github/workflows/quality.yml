@@ -35,6 +35,9 @@ jobs:
       NODE_ENV: test
       CORS_ORIGIN: http://127.0.0.1:3001
       E2E_BASE_URL: http://127.0.0.1:3001
+      # El navegador de CI genera varias solicitudes de verificación y health.
+      # Producción conserva el límite seguro por defecto de 100 solicitudes/15 min.
+      RATE_LIMIT_MAX_REQUESTS: 1000
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
