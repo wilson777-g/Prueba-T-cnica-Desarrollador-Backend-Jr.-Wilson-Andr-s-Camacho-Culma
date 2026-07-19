@@ -17,19 +17,19 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [copiedField, setCopiedField] = useState('');
+  const [selectedProfile, setSelectedProfile] = useState('');
   const [serviceStatus, setServiceStatus] = useState<'checking' | 'ready' | 'delayed'>('checking');
 
   const credentials = [
     {
       role: 'ADMIN',
-      roleLabel: 'Rol administrador',
+      roleLabel: 'Administración general',
       email: 'admin@example.test',
       password: 'DemoAdmin123!',
     },
     {
       role: 'OPERADOR',
-      roleLabel: 'Rol operador',
+      roleLabel: 'Coordinación de sede',
       email: 'operador.bogota@example.test',
       password: 'DemoOper123!',
     },
@@ -39,10 +39,10 @@ export const LoginPage: React.FC = () => {
     warmUpServer().then(() => setServiceStatus('ready')).catch(() => setServiceStatus('delayed'));
   }, []);
 
-  const useDemoAccount = (demoEmail: string, demoPassword: string) => {
+  const useInstitutionalAccount = (demoEmail: string, demoPassword: string) => {
     setEmail(demoEmail);
     setPassword(demoPassword);
-    setCopiedField(demoEmail);
+    setSelectedProfile(demoEmail);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +57,7 @@ export const LoginPage: React.FC = () => {
       const statusCode = getStatusCode(err);
 
       if (!statusCode || statusCode >= 500) {
-        setError('El servidor gratuito tardó demasiado en responder. Espera unos segundos y vuelve a intentarlo.');
+        setError('El servicio académico no respondió a tiempo. Intenta nuevamente en unos segundos.');
       } else {
         setError('No fue posible iniciar sesion. Revisa las credenciales e intenta nuevamente.');
       }
@@ -119,10 +119,10 @@ export const LoginPage: React.FC = () => {
         <div className={styles.testCreds}>
           <div className={styles.credsHeader}>
             <div>
-              <h3>Recorrido de demostración</h3>
-              <p>Selecciona un perfil para explorar permisos diferentes.</p>
+          <h3>Perfiles de evaluación</h3>
+              <p>Acceso controlado para revisar los flujos según nivel de autorización.</p>
             </div>
-            <span>Datos ficticios</span>
+            <span>Entorno de portafolio</span>
           </div>
 
           <div className={styles.credsList}>
@@ -131,7 +131,7 @@ export const LoginPage: React.FC = () => {
                 <strong>{credential.roleLabel}</strong>
 
                 <p>{credential.role === 'ADMIN' ? 'Configura programas, revisa sedes y consulta indicadores globales.' : 'Gestiona estudiantes y matrículas de la sede asignada.'}</p>
-                <button type="button" onClick={() => useDemoAccount(credential.email, credential.password)} className={styles.copyBtn}>{copiedField === credential.email ? 'Perfil seleccionado' : 'Usar este perfil'}</button>
+                <button type="button" onClick={() => useInstitutionalAccount(credential.email, credential.password)} className={styles.copyBtn}>{selectedProfile === credential.email ? 'Perfil seleccionado' : 'Seleccionar perfil'}</button>
               </div>
             ))}
           </div>
