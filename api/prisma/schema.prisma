@@ -26,6 +26,7 @@ model User {
   intentosFallo Int         @default(0)
   bloqueadoHasta DateTime?
   tokenVersion  Int         @default(0)
+  mustChangePassword Boolean @default(false)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   deletedAt     DateTime?   // Soft delete

@@ -4,6 +4,7 @@ import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditFilterDto, CreateOperadorDto, UpdateOperadorDto } from './dto/administracion.dto';
 import { AuthenticatedUser } from '../../types/authenticated-user';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AdministracionService {
@@ -12,7 +13,7 @@ export class AdministracionService {
   findOperadores() {
     return this.prisma.user.findMany({
       where: { rol: 'OPERADOR', deletedAt: null },
-      select: { id: true, nombre: true, email: true, rol: true, sedeId: true, sede: true, activo: true, ultimoLogin: true, createdAt: true },
+      select: { id: true, nombre: true, email: true, rol: true, sedeId: true, sede: true, activo: true, ultimoLogin: true, createdAt: true, mustChangePassword: true },
       orderBy: { nombre: 'asc' },
     });
   }
@@ -22,7 +23,7 @@ export class AdministracionService {
     if (!sede || sede.estado !== 'ACTIVA') throw new BadRequestException('La sede seleccionada no está disponible');
     try {
       return await this.prisma.$transaction(async tx => {
-        const created = await tx.user.create({ data: { nombre: dto.nombre.trim(), email: dto.email.toLowerCase().trim(), password: await bcrypt.hash(dto.password, 12), rol: 'OPERADOR', sedeId: dto.sedeId }, select: { id: true, nombre: true, email: true, rol: true, sedeId: true, sede: true, activo: true, createdAt: true } });
+        const created = await tx.user.create({ data: { nombre: dto.nombre.trim(), email: dto.email.toLowerCase().trim(), password: await bcrypt.hash(dto.password, 12), rol: 'OPERADOR', sedeId: dto.sedeId, mustChangePassword: true }, select: { id: true, nombre: true, email: true, rol: true, sedeId: true, sede: true, activo: true, createdAt: true, mustChangePassword: true } });
         await tx.auditLog.create({ data: { userId: actor.id, accion: 'OPERADOR_CREADO', entidad: 'User', entidadId: created.id, detalle: { email: created.email, sedeId: created.sedeId } } });
         return created;
       });
@@ -54,5 +55,16 @@ export class AdministracionService {
       this.prisma.auditLog.count({ where }),
     ]);
     return { data, pagination: { page, limit, total, totalPages: Math.ceil(total/limit) } };
+  }
+
+  async resetOperadorPassword(id: string, actor: AuthenticatedUser) {
+    const current = await this.prisma.user.findFirst({ where: { id, rol: 'OPERADOR', activo: true, deletedAt: null } });
+    if (!current) throw new NotFoundException('Operador activo no encontrado');
+    const temporaryPassword = `Tmp!${randomBytes(9).toString('base64url')}aA1`;
+    await this.prisma.$transaction(async tx => {
+      await tx.user.update({ where: { id }, data: { password: await bcrypt.hash(temporaryPassword, 12), mustChangePassword: true, tokenVersion: { increment: 1 }, intentosFallo: 0, bloqueadoHasta: null } });
+      await tx.auditLog.create({ data: { userId: actor.id, accion: 'CREDENCIAL_TEMPORAL_EMITIDA', entidad: 'User', entidadId: id, detalle: { email: current.email, sesionesRevocadas: true } } });
+    });
+    return { temporaryPassword, expiresAfterUse: true, message: 'Credencial temporal generada. Se mostrará una sola vez.' };
   }
 }

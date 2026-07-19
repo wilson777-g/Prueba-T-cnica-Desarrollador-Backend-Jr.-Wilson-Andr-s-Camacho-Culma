@@ -5,4 +5,5 @@ export type AuthenticatedUser = {
   rol: 'ADMIN' | 'OPERADOR';
   sedeId: string | null;
   csrf?: string;
+  mustChangePassword?: boolean;
 };

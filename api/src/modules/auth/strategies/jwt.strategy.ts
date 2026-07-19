@@ -9,6 +9,7 @@ type JwtPayload = {
   email?: string;
   ver?: number;
   csrf?: string;
+  pwd?: boolean;
 };
 
 const cookieToken = (request: { headers?: { cookie?: string } }) => {
@@ -24,7 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     configService: ConfigService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromExtractors([ExtractJwt.fromAuthHeaderAsBearerToken(), cookieToken]),
+      jwtFromRequest: ExtractJwt.fromExtractors([cookieToken]),
       ignoreExpiration: false,
       secretOrKey: configService.getOrThrow<string>('JWT_SECRET'),
     });
@@ -42,6 +43,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         activo: true,
         deletedAt: true,
         tokenVersion: true,
+        mustChangePassword: true,
       },
     });
 
@@ -56,6 +58,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       rol: user.rol,
       sedeId: user.sedeId,
       csrf: payload.csrf,
+      mustChangePassword: user.mustChangePassword,
     };
   }
 }

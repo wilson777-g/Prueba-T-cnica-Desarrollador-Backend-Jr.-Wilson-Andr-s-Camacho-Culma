@@ -18,7 +18,7 @@ function App() {
 
   useEffect(() => {
     api.verify()
-      .then(response => { localStorage.setItem('user', JSON.stringify(response.user)); setIsAuthenticated(true); })
+      .then(response => { localStorage.setItem('user', JSON.stringify(response.user)); setIsAuthenticated(true); if (response.user.mustChangePassword && window.location.pathname !== '/seguridad') window.location.replace('/seguridad'); })
       .catch(() => { localStorage.removeItem('user'); sessionStorage.removeItem('csrf_token'); setIsAuthenticated(false); })
       .finally(() => setLoading(false));
   }, []);

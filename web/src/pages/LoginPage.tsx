@@ -51,8 +51,8 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      await apiService.login(email, password);
-      window.location.href = '/';
+      const session = await apiService.login(email, password);
+      window.location.href = session.user.mustChangePassword ? '/seguridad' : '/';
     } catch (err: unknown) {
       const statusCode = getStatusCode(err);
 

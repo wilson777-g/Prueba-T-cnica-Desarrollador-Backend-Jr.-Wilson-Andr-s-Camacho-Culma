@@ -8,6 +8,7 @@ export interface User {
   activo?: boolean;
   ultimoLogin?: string | null;
   createdAt?: string;
+  mustChangePassword?: boolean;
 }
 
 export interface AuthResponse {

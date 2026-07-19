@@ -60,5 +60,6 @@ export class AuthResponseDto {
     nombre: string;
     rol: string;
     sedeId?: string | null;
+    mustChangePassword?: boolean;
   };
 }

@@ -153,6 +153,11 @@ class ApiService {
     return response.data;
   }
 
+  async resetOperadorPassword(id: string): Promise<{ temporaryPassword: string; message: string }> {
+    const response = await this.api.post<{ temporaryPassword: string; message: string }>(`/api/administracion/operadores/${id}/reset-password`);
+    return response.data;
+  }
+
   async getAudit(params?: { entidad?: string; page?: number; limit?: number }): Promise<AuditResponse> {
     const response = await this.api.get<AuditResponse>('/api/administracion/auditoria', { params });
     return response.data;

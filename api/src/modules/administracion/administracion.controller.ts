@@ -12,5 +12,6 @@ export class AdministracionController {
   @Get('operadores') operadores() { return this.service.findOperadores(); }
   @Post('operadores') create(@Body() dto: CreateOperadorDto, @Request() req: { user: AuthenticatedUser }) { return this.service.createOperador(dto, req.user); }
   @Patch('operadores/:id') update(@Param('id') id: string, @Body() dto: UpdateOperadorDto, @Request() req: { user: AuthenticatedUser }) { return this.service.updateOperador(id, dto, req.user); }
+  @Post('operadores/:id/reset-password') resetPassword(@Param('id') id: string, @Request() req: { user: AuthenticatedUser }) { return this.service.resetOperadorPassword(id, req.user); }
   @Get('auditoria') audit(@Query() filters: AuditFilterDto) { return this.service.audit(filters); }
 }

@@ -115,6 +115,7 @@ export class AuthService {
         sedeId: user.sedeId,
         ver: user.tokenVersion,
         csrf: csrf_token,
+        pwd: user.mustChangePassword,
       },
       {
         subject: user.id,
@@ -131,6 +132,7 @@ export class AuthService {
         nombre: user.nombre,
         rol: user.rol,
         sedeId: user.sedeId,
+        mustChangePassword: user.mustChangePassword,
       },
     };
   }
@@ -152,7 +154,7 @@ export class AuthService {
       throw new BadRequestException('La nueva contraseña debe ser diferente de la actual');
     }
     await this.prisma.$transaction(async tx => {
-      await tx.user.update({ where: { id: userId }, data: { password: await bcrypt.hash(dto.newPassword, 12), tokenVersion: { increment: 1 } } });
+      await tx.user.update({ where: { id: userId }, data: { password: await bcrypt.hash(dto.newPassword, 12), tokenVersion: { increment: 1 }, mustChangePassword: false } });
       await tx.auditLog.create({ data: { userId, accion: 'CONTRASENA_CAMBIADA', entidad: 'User', entidadId: userId, detalle: { sesionesRevocadas: true } } });
     });
     return { message: 'Contraseña actualizada. Inicia sesión nuevamente.' };

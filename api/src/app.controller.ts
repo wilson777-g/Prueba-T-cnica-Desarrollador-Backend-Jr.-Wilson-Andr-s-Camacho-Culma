@@ -13,6 +13,8 @@ export class AppController {
       status: 'ok',
       database: 'ok',
       service: 'academic-management-api',
+      uptimeSeconds: Math.floor(process.uptime()),
+      environment: process.env.NODE_ENV || 'development',
       timestamp: new Date().toISOString(),
     };
   }

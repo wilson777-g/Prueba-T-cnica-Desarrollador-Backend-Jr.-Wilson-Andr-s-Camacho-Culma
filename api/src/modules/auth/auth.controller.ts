@@ -28,7 +28,7 @@ export class AuthController {
   async verify(@Request() req: { user: AuthenticatedUser }) {
     return {
       message: 'Token valido',
-      user: { id: req.user.id, email: req.user.email, nombre: req.user.nombre, rol: req.user.rol, sedeId: req.user.sedeId },
+      user: { id: req.user.id, email: req.user.email, nombre: req.user.nombre, rol: req.user.rol, sedeId: req.user.sedeId, mustChangePassword: req.user.mustChangePassword },
       csrf_token: req.user.csrf,
     };
   }
