@@ -310,7 +310,7 @@ export const EstudiantesPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <h2>Gestion de Estudiantes</h2>
+      <h2>Gestión de estudiantes</h2>
 
       {error && <div className={styles.error}>{error}</div>}
       {notice && <div className={styles.success}>{notice}</div>}
