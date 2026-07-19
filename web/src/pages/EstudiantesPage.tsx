@@ -49,6 +49,8 @@ export const EstudiantesPage: React.FC = () => {
   const [suspendTarget, setSuspendTarget] = useState<Estudiante | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [suspending, setSuspending] = useState(false);
+  const [profile, setProfile] = useState<Estudiante | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [selectedSede, setSelectedSede] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterEstado, setFilterEstado] = useState('');
@@ -217,6 +219,13 @@ export const EstudiantesPage: React.FC = () => {
 
     setSuspendTarget(estudiante);
     setError('');
+  };
+
+  const openProfile = async (estudiante: Estudiante) => {
+    setProfileLoading(true); setError('');
+    try { setProfile(await apiService.getEstudianteById(estudiante.id)); }
+    catch (err) { setError(getErrorMessage(err, 'No fue posible cargar la ficha académica')); }
+    finally { setProfileLoading(false); }
   };
 
   const handleConfirmDelete = async () => {
@@ -477,6 +486,7 @@ export const EstudiantesPage: React.FC = () => {
                   {isAdmin && (
                     <td>
                       <div className={styles.actionButtons}>
+                        <button type="button" onClick={() => void openProfile(estudiante)} className={`${styles.btnAction} ${styles.btnEdit}`} disabled={profileLoading}>Ver ficha</button>
                         <button
                           type="button"
                           onClick={() => handleEditEstudiante(estudiante)}
@@ -585,6 +595,10 @@ export const EstudiantesPage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {profile && (
+        <div className={styles.modalOverlay} role="presentation"><div className={styles.confirmModal} role="dialog" aria-modal="true"><div className={styles.modalContent}><span className={styles.modalEyebrow}>Ficha académica</span><h3>{profile.nombreCompleto}</h3><p>{profile.documento} · {profile.email} · {profile.telefono}</p><p><strong>Sede:</strong> {profile.sede?.nombre} &nbsp; <strong>Estado:</strong> {profile.estado}</p><h4>Historial de matrículas</h4>{profile.matriculas?.length?profile.matriculas.map(item=><p key={item.id}><strong>{item.programa.nombre}</strong> · {item.periodo} · {item.estado} · {new Date(item.fechaMatricula).toLocaleDateString('es-CO')}</p>):<p>Sin matrículas registradas.</p>}</div><div className={styles.modalActions}><button type="button" onClick={()=>setProfile(null)} className={styles.btnModalSecondary}>Cerrar</button></div></div></div>
       )}
 
       {deleteTarget && (
