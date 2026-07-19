@@ -96,11 +96,11 @@ RATE_LIMIT_MAX_REQUESTS=100
 Frontend Vercel:
 
 ```env
-VITE_API_URL=
+VITE_API_URL=https://academic-management-api-35mu.onrender.com
 VITE_DEMO_MODE=true
 ```
 
-`VITE_API_URL` debe quedar vacia o eliminada para usar same-origin. Las llamadas del frontend quedan como `/api/auth/login`, `/api/estudiantes` y `/api/health`.
+El frontend usa la API directa de Render para evitar que el límite temporal del proxy de Vercel interrumpa el primer login mientras la instancia gratuita despierta. CORS queda restringido a los dominios públicos conocidos.
 
 ## Credenciales de prueba
 

@@ -14,7 +14,8 @@ import {
   Matricula,
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL?.trim() || '';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL?.trim() || 'https://academic-management-api-35mu.onrender.com';
 
 class ApiService {
   private api: AxiosInstance;

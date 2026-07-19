@@ -9,8 +9,16 @@ async function bootstrap() {
 
   app.use(helmet());
 
+  const allowedOrigins = Array.from(
+    new Set([
+      process.env.CORS_ORIGIN || 'http://localhost:3001',
+      'https://dna-music-web.vercel.app',
+      'https://academic-management-web.vercel.app',
+    ]),
+  );
+
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
