@@ -4,4 +4,5 @@ export type AuthenticatedUser = {
   nombre: string;
   rol: 'ADMIN' | 'OPERADOR';
   sedeId: string | null;
+  csrf?: string;
 };

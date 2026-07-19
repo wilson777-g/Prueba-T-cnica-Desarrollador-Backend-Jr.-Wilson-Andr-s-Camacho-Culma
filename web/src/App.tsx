@@ -10,15 +10,17 @@ import { SedesPage } from './pages/SedesPage';
 import { OperadoresPage } from './pages/OperadoresPage';
 import { AuditoriaPage } from './pages/AuditoriaPage';
 import { SecurityPage } from './pages/SecurityPage';
+import api from './services/api';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
-    setLoading(false);
+    api.verify()
+      .then(response => { localStorage.setItem('user', JSON.stringify(response.user)); setIsAuthenticated(true); })
+      .catch(() => { localStorage.removeItem('user'); sessionStorage.removeItem('csrf_token'); setIsAuthenticated(false); })
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) {

@@ -21,7 +21,7 @@ import {
 // La demo publica tiene un unico backend canonico. No usamos VITE_API_URL aqui
 // porque una variable antigua en Vercel apuntaba a un servicio retirado y
 // bloqueaba el inicio de sesion aun cuando Render estaba saludable.
-const API_BASE_URL = 'https://academic-management-api-35mu.onrender.com';
+const API_BASE_URL = '';
 
 class ApiService {
   private api: AxiosInstance;
@@ -30,13 +30,14 @@ class ApiService {
     this.api = axios.create({
       baseURL: API_BASE_URL,
       timeout: 65000,
+      withCredentials: true,
     });
 
-    // Interceptor para agregar token a todas las requests
     this.api.interceptors.request.use(config => {
-      const storedToken = localStorage.getItem('token');
-      if (storedToken) {
-        config.headers.Authorization = `Bearer ${storedToken}`;
+      const csrf = sessionStorage.getItem('csrf_token');
+      const method = config.method?.toUpperCase();
+      if (csrf && method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+        config.headers['X-CSRF-Token'] = csrf;
       }
       return config;
     });
@@ -46,8 +47,8 @@ class ApiService {
       response => response,
       error => {
         if (error.response?.status === 401) {
-          localStorage.removeItem('token');
           localStorage.removeItem('user');
+          sessionStorage.removeItem('csrf_token');
           window.location.href = '/login';
         }
         return Promise.reject(error);
@@ -74,7 +75,7 @@ class ApiService {
       email,
       password,
     });
-    localStorage.setItem('token', response.data.access_token);
+    sessionStorage.setItem('csrf_token', response.data.csrf_token);
     localStorage.setItem('user', JSON.stringify(response.data.user));
     return response.data;
   }
@@ -85,14 +86,20 @@ class ApiService {
   }
 
   async verify(): Promise<VerifyResponse> {
-    const response = await this.api.post<VerifyResponse>('/api/auth/verify', {});
+    const response = await this.api.get<VerifyResponse>('/api/auth/verify');
+    sessionStorage.setItem('csrf_token', response.data.csrf_token);
     return response.data;
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
     const response = await this.api.post<{ message: string }>('/api/auth/change-password', { currentPassword, newPassword });
-    localStorage.removeItem('token'); localStorage.removeItem('user');
+    localStorage.removeItem('user'); sessionStorage.removeItem('csrf_token');
     return response.data;
+  }
+
+  async logout(): Promise<void> {
+    await this.api.post('/api/auth/logout');
+    localStorage.removeItem('user'); sessionStorage.removeItem('csrf_token');
   }
 
   // ============================================

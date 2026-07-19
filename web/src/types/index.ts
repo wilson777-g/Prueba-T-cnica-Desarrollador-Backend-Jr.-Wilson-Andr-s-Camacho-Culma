@@ -12,6 +12,7 @@ export interface User {
 
 export interface AuthResponse {
   access_token: string;
+  csrf_token: string;
   user: User;
 }
 
@@ -26,6 +27,7 @@ export interface RegisterDTO {
 export interface VerifyResponse {
   message: string;
   user: User;
+  csrf_token: string;
 }
 
 export interface Sede {

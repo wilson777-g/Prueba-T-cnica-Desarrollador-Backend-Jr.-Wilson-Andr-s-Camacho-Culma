@@ -53,6 +53,7 @@ export class ChangePasswordDto {
 
 export class AuthResponseDto {
   access_token!: string;
+  csrf_token!: string;
   user!: {
     id: string;
     email: string;

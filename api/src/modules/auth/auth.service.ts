@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthResponseDto, ChangePasswordDto, LoginDto, RegisterDto } from './dto/auth.dto';
 
@@ -106,12 +107,14 @@ export class AuthService {
       },
     });
 
+    const csrf_token = randomBytes(32).toString('base64url');
     const access_token = this.jwtService.sign(
       {
         email: user.email,
         rol: user.rol,
         sedeId: user.sedeId,
         ver: user.tokenVersion,
+        csrf: csrf_token,
       },
       {
         subject: user.id,
@@ -121,6 +124,7 @@ export class AuthService {
 
     return {
       access_token,
+      csrf_token,
       user: {
         id: user.id,
         email: user.email,

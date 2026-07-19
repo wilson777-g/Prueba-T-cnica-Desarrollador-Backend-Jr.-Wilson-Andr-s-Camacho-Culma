@@ -2,10 +2,11 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { User } from '../types';
 import styles from '../styles/Layout.module.css';
+import api from '../services/api';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const user = JSON.parse(localStorage.getItem('user') || '{}') as User;
-  const logout = () => { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.href = '/login'; };
+  const logout = async () => { try { await api.logout(); } finally { localStorage.removeItem('user'); sessionStorage.removeItem('csrf_token'); window.location.href = '/login'; } };
   const links = [{to:'/',label:'Resumen',mark:'R'},{to:'/estudiantes',label:'Estudiantes',mark:'E'},{to:'/matriculas',label:'Matrículas',mark:'M'},{to:'/programas',label:'Programas',mark:'P'},...(user.rol==='ADMIN'?[{to:'/sedes',label:'Sedes',mark:'S'},{to:'/operadores',label:'Responsables',mark:'O'},{to:'/auditoria',label:'Auditoría',mark:'A'}]:[]),{to:'/seguridad',label:'Seguridad',mark:'C'}];
   return <div className={styles.shell}>
     <aside className={styles.sidebar}><div className={styles.brand}><span className={styles.brandMark}>DNA</span><div><strong>DNA Music</strong><small>Gestión académica</small></div></div>

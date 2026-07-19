@@ -8,6 +8,13 @@ type JwtPayload = {
   sub: string;
   email?: string;
   ver?: number;
+  csrf?: string;
+};
+
+const cookieToken = (request: { headers?: { cookie?: string } }) => {
+  const cookies = request?.headers?.cookie || '';
+  const value = cookies.split(';').map(item => item.trim()).find(item => item.startsWith('dna_session='));
+  return value ? decodeURIComponent(value.slice('dna_session='.length)) : null;
 };
 
 @Injectable()
@@ -17,7 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     configService: ConfigService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([ExtractJwt.fromAuthHeaderAsBearerToken(), cookieToken]),
       ignoreExpiration: false,
       secretOrKey: configService.getOrThrow<string>('JWT_SECRET'),
     });
@@ -48,6 +55,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       nombre: user.nombre,
       rol: user.rol,
       sedeId: user.sedeId,
+      csrf: payload.csrf,
     };
   }
 }
