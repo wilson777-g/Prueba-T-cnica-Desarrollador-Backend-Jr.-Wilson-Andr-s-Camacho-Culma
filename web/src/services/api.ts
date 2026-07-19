@@ -10,6 +10,8 @@ import {
   Stats,
   UpdateEstudianteDTO,
   VerifyResponse,
+  Programa,
+  Matricula,
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL?.trim() || '';
@@ -131,6 +133,26 @@ class ApiService {
   // ============================================
   async getStats(): Promise<Stats> {
     const response = await this.api.get<Stats>('/api/stats');
+    return response.data;
+  }
+
+  async getProgramas(): Promise<Programa[]> {
+    const response = await this.api.get<Programa[]>('/api/programas');
+    return response.data;
+  }
+
+  async createPrograma(data: Pick<Programa, 'codigo' | 'nombre' | 'duracionMeses' | 'modalidad'> & { descripcion?: string }): Promise<Programa> {
+    const response = await this.api.post<Programa>('/api/programas', data);
+    return response.data;
+  }
+
+  async getMatriculas(params?: Record<string, string | undefined>): Promise<Matricula[]> {
+    const response = await this.api.get<Matricula[]>('/api/matriculas', { params });
+    return response.data;
+  }
+
+  async createMatricula(data: Pick<Matricula, 'estudianteId' | 'programaId' | 'sedeId' | 'periodo'>): Promise<Matricula> {
+    const response = await this.api.post<Matricula>('/api/matriculas', data);
     return response.data;
   }
 }

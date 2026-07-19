@@ -28,6 +28,7 @@ model User {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   deletedAt     DateTime?   // Soft delete
+  auditLogs     AuditLog[]
 
   @@index([email])
   @@index([sedeId])
@@ -49,6 +50,7 @@ model Sede {
   estado       SedeEstado  @default(ACTIVA)
   usuarios     User[]
   estudiantes  Estudiante[]
+  matriculas   Matricula[]
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
@@ -72,6 +74,7 @@ model Estudiante {
   sedeId          String
   sede            Sede                @relation(fields: [sedeId], references: [id], onDelete: Restrict)
   programa        String
+  matriculas      Matricula[]
   estado          EstudianteEstado    @default(ACTIVO)
   fechaInscripcion DateTime            @default(now())
   createdAt       DateTime            @default(now())
@@ -81,6 +84,71 @@ model Estudiante {
   @@index([sedeId])
   @@index([estado])
   @@index([email])
+}
+
+model Programa {
+  id          String         @id @default(cuid())
+  codigo      String         @unique
+  nombre      String         @unique
+  descripcion String?
+  duracionMeses Int
+  modalidad   ProgramaModalidad @default(PRESENCIAL)
+  estado      ProgramaEstado @default(ACTIVO)
+  matriculas  Matricula[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([estado])
+}
+
+enum ProgramaModalidad {
+  PRESENCIAL
+  HIBRIDA
+  VIRTUAL
+}
+
+enum ProgramaEstado {
+  ACTIVO
+  INACTIVO
+}
+
+model Matricula {
+  id            String          @id @default(cuid())
+  estudianteId  String
+  estudiante    Estudiante      @relation(fields: [estudianteId], references: [id], onDelete: Restrict)
+  programaId    String
+  programa      Programa        @relation(fields: [programaId], references: [id], onDelete: Restrict)
+  sedeId        String
+  sede          Sede            @relation(fields: [sedeId], references: [id], onDelete: Restrict)
+  periodo       String
+  estado        MatriculaEstado @default(ACTIVA)
+  fechaMatricula DateTime        @default(now())
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@unique([estudianteId, programaId, periodo])
+  @@index([sedeId, periodo])
+  @@index([estado])
+}
+
+enum MatriculaEstado {
+  ACTIVA
+  FINALIZADA
+  CANCELADA
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  accion     String
+  entidad    String
+  entidadId  String
+  detalle    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entidad, entidadId])
+  @@index([userId, createdAt])
 }
 
 enum EstudianteEstado {

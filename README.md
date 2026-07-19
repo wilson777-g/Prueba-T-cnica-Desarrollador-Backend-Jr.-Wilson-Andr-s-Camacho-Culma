@@ -1,15 +1,15 @@
-# Sistema Academico Multi-Sede
+# DNA Music - Plataforma de Gestión Académica Multisede
 
-Aplicacion full-stack en produccion para gestion de estudiantes por sede. El repositorio mantiene una separacion clara entre `api/` para el backend NestJS y `web/` para el frontend React/Vite.
+Aplicación institucional para gestionar estudiantes, programas de formación musical y matrículas por sede y periodo. El repositorio separa `api/` (NestJS, Prisma y PostgreSQL) de `web/` (React y Vite).
 
 ## Demo publica
 
 El usuario final usa una sola URL publica:
 
-- Demo principal: `https://academic-management-web.vercel.app`
-- Verificacion de API via frontend: `https://academic-management-web.vercel.app/api/health`
-- Backend de infraestructura: `https://academic-management-api-35mu.onrender.com`
-- Health directo de infraestructura: `https://academic-management-api-35mu.onrender.com/api/health`
+- Demo principal: `https://dna-music-web.vercel.app`
+- Verificación de API vía frontend: `https://dna-music-web.vercel.app/api/health`
+- Backend de infraestructura: `https://dna-music-api-j323.onrender.com`
+- Health directo: `https://dna-music-api-j323.onrender.com/api/health`
 
 Vercel sirve el frontend y proxyea internamente `/api/*` hacia Render. Por eso el boton publico del demo debe apuntar al frontend, no al backend directo.
 
@@ -18,11 +18,11 @@ Vercel sirve el frontend y proxyea internamente `/api/*` hacia Render. Por eso e
 ```text
 api/                 Backend NestJS + TypeScript
   src/
-  prisma/
+  prisma/              Esquema, migraciones y datos ficticios
   package.json
   tsconfig.json
 web/                 Frontend React + Vite
-  src/
+  src/                 Resumen, estudiantes, programas y matrículas
   package.json
   tsconfig.json
   vercel.json
@@ -58,6 +58,8 @@ npm run db:seed
 npm run start:dev
 ```
 
+En producción, `npm run start:prod` ejecuta primero `prisma migrate deploy`. La migración crea el catálogo académico inicial de forma idempotente y luego inicia NestJS.
+
 Frontend:
 
 ```bash
@@ -85,7 +87,7 @@ JWT_SECRET=valor-largo-y-seguro
 JWT_EXPIRATION=1h
 NODE_ENV=production
 PORT=3000
-CORS_ORIGIN=https://academic-management-web.vercel.app
+CORS_ORIGIN=https://dna-music-web.vercel.app
 DEMO_MODE=true
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
@@ -171,6 +173,16 @@ Pendiente con mas tiempo:
 
 Mas detalle en `seguridad_revision.md`.
 
+## Alcance funcional
+
+- Resumen operativo con actividad reciente e indicadores.
+- Estudiantes con búsqueda, filtros, estados y control por sede.
+- Catálogo formal de programas con código, duración y modalidad.
+- Matrículas únicas por estudiante, programa y periodo.
+- Autorización para administración general y coordinación de sede.
+- Auditoría básica de creación y cambio de estado de matrículas.
+- Diseño institucional responsive sin módulos simulados.
+
 ## Modelo de datos
 
 ```text
@@ -208,6 +220,20 @@ Estudiante
 - fechaInscripcion
 - deletedAt
 - createdAt / updatedAt
+
+Programa
+- código y nombre únicos
+- descripción, duración y modalidad
+- estado activo/inactivo
+
+Matrícula
+- estudiante, programa y sede
+- periodo y estado académico
+- fecha de matrícula
+
+AuditLog
+- usuario responsable
+- acción, entidad y detalle del cambio
 ```
 
 Relaciones:

@@ -100,3 +100,27 @@ export interface Stats {
     estudiantesActivos: number;
   } | null;
 }
+
+export interface Programa {
+  id: string;
+  codigo: string;
+  nombre: string;
+  descripcion?: string;
+  duracionMeses: number;
+  modalidad: 'PRESENCIAL' | 'HIBRIDA' | 'VIRTUAL';
+  estado: 'ACTIVO' | 'INACTIVO';
+  _count?: { matriculas: number };
+}
+
+export interface Matricula {
+  id: string;
+  estudianteId: string;
+  programaId: string;
+  sedeId: string;
+  periodo: string;
+  estado: 'ACTIVA' | 'FINALIZADA' | 'CANCELADA';
+  fechaMatricula: string;
+  estudiante: Estudiante;
+  programa: Programa;
+  sede: Sede;
+}

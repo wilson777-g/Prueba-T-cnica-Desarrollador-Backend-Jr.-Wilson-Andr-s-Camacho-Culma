@@ -289,6 +289,40 @@ async function main() {
     });
   }
 
+  const programas = [
+    { codigo: 'MUS-CAN', nombre: 'Canto contemporáneo', descripcion: 'Técnica vocal, interpretación y ensamble.', duracionMeses: 12, modalidad: 'PRESENCIAL' as const },
+    { codigo: 'MUS-PIA', nombre: 'Piano integral', descripcion: 'Lectura, armonía y repertorio aplicado.', duracionMeses: 18, modalidad: 'PRESENCIAL' as const },
+    { codigo: 'MUS-GUI', nombre: 'Guitarra moderna', descripcion: 'Técnica, acompañamiento y práctica de ensamble.', duracionMeses: 12, modalidad: 'HIBRIDA' as const },
+    { codigo: 'MUS-PRO', nombre: 'Producción musical', descripcion: 'Grabación, edición, mezcla y fundamentos de audio.', duracionMeses: 10, modalidad: 'HIBRIDA' as const },
+  ];
+
+  const savedPrograms = [];
+  for (const programa of programas) {
+    savedPrograms.push(await prisma.programa.upsert({
+      where: { codigo: programa.codigo },
+      update: { ...programa, estado: 'ACTIVO' },
+      create: programa,
+    }));
+  }
+
+  const enrollmentSeeds = [
+    ['juan.rojas.bogota@example.com', 'MUS-CAN', bogota.id],
+    ['maria.garcia.bogota@example.com', 'MUS-PIA', bogota.id],
+    ['carlos.perez.medellin@example.com', 'MUS-GUI', medellin.id],
+    ['valentina.restrepo.medellin@example.com', 'MUS-PRO', medellin.id],
+  ];
+  for (const [email, code, sedeId] of enrollmentSeeds) {
+    const estudiante = await prisma.estudiante.findUnique({ where: { email } });
+    const programa = savedPrograms.find(item => item.codigo === code);
+    if (estudiante && programa) {
+      await prisma.matricula.upsert({
+        where: { estudianteId_programaId_periodo: { estudianteId: estudiante.id, programaId: programa.id, periodo: '2026-2' } },
+        update: { estado: 'ACTIVA', sedeId },
+        create: { estudianteId: estudiante.id, programaId: programa.id, sedeId, periodo: '2026-2' },
+      });
+    }
+  }
+
   console.log('Seed completado.');
   console.log('Credenciales:');
   console.log('ADMIN: admin@example.test / DemoAdmin123!');

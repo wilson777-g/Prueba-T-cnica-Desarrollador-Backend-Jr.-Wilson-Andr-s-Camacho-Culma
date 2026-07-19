@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Layout } from './components/Layout';
 import { LoginPage } from './pages/LoginPage';
 import { EstudiantesPage } from './pages/EstudiantesPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { ProgramasPage } from './pages/ProgramasPage';
+import { MatriculasPage } from './pages/MatriculasPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -25,18 +28,10 @@ function App() {
       <Routes>
         <Route path="/login" element={loginRoute} />
         <Route path="/login.html" element={loginRoute} />
-        <Route
-          path="/"
-          element={
-            isAuthenticated ? (
-              <Layout>
-                <EstudiantesPage />
-              </Layout>
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
+        <Route path="/" element={isAuthenticated ? <Layout><DashboardPage /></Layout> : <Navigate to="/login" />} />
+        <Route path="/estudiantes" element={isAuthenticated ? <Layout><EstudiantesPage /></Layout> : <Navigate to="/login" />} />
+        <Route path="/programas" element={isAuthenticated ? <Layout><ProgramasPage /></Layout> : <Navigate to="/login" />} />
+        <Route path="/matriculas" element={isAuthenticated ? <Layout><MatriculasPage /></Layout> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );

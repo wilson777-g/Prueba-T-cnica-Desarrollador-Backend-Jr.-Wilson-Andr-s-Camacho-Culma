@@ -2,13 +2,7 @@ import React, { useEffect, useState } from 'react';
 import apiService from '../services/api';
 import styles from '../styles/Auth.module.css';
 
-const warmUpServer = async () => {
-  try {
-    await apiService.warmUp();
-  } catch {
-    // El backend puede tardar unos segundos en responder; el login mostrara el error si persiste.
-  }
-};
+const warmUpServer = () => apiService.warmUp();
 
 type ApiStatusError = {
   response?: {
@@ -19,12 +13,12 @@ type ApiStatusError = {
 const getStatusCode = (error: unknown) => (error as ApiStatusError).response?.status;
 
 export const LoginPage: React.FC = () => {
-  const demoPasswordMask = '********';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [copiedField, setCopiedField] = useState('');
+  const [serviceStatus, setServiceStatus] = useState<'checking' | 'ready' | 'delayed'>('checking');
 
   const credentials = [
     {
@@ -42,8 +36,14 @@ export const LoginPage: React.FC = () => {
   ];
 
   useEffect(() => {
-    void warmUpServer();
+    warmUpServer().then(() => setServiceStatus('ready')).catch(() => setServiceStatus('delayed'));
   }, []);
+
+  const useDemoAccount = (demoEmail: string, demoPassword: string) => {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    setCopiedField(demoEmail);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,29 +67,19 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const copyCredential = async (value: string, field: string) => {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopiedField(field);
-    } catch {
-      setError('No se pudo copiar automaticamente. Intenta nuevamente.');
-    }
-  };
-
   return (
     <div className={styles.container}>
       <div className={styles.loginBox}>
         <div className={styles.brandHeader}>
-          <div className={styles.brandMark} aria-hidden="true">
-            SG
-          </div>
+          <div className={styles.brandMark} aria-hidden="true">DNA</div>
           <div>
-            <h1 className={styles.title}>Sistema de Gestion Academica</h1>
-            <p>Gestion de estudiantes por sede</p>
+            <h1 className={styles.title}>DNA Music</h1>
+            <p>Plataforma de gestión académica multisede</p>
           </div>
         </div>
 
-        <h2>Iniciar Sesion</h2>
+        <h2>Acceso institucional</h2>
+        <div className={`${styles.service} ${styles[serviceStatus]}`}><span />{serviceStatus === 'ready' ? 'Servicio disponible' : serviceStatus === 'checking' ? 'Verificando servicio académico…' : 'El servidor está despertando; puede tardar unos segundos.'}</div>
 
         {error && <div className={styles.error}>{error}</div>}
 
@@ -130,10 +120,10 @@ export const LoginPage: React.FC = () => {
         <div className={styles.testCreds}>
           <div className={styles.credsHeader}>
             <div>
-              <h3>Acceso demo para evaluacion tecnica</h3>
-              <p>Credenciales disponibles para prueba controlada</p>
+              <h3>Recorrido de demostración</h3>
+              <p>Selecciona un perfil para explorar permisos diferentes.</p>
             </div>
-            <span>Copiar y pegar</span>
+            <span>Datos ficticios</span>
           </div>
 
           <div className={styles.credsList}>
@@ -141,34 +131,8 @@ export const LoginPage: React.FC = () => {
               <div key={credential.role} className={styles.credentialCard}>
                 <strong>{credential.roleLabel}</strong>
 
-                <div className={styles.credentialRow}>
-                  <span>Usuario</span>
-                  <div className={styles.credentialValue}>
-                    <code>{credential.email}</code>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => copyCredential(credential.email, `${credential.role}-email`)}
-                    className={styles.copyBtn}
-                  >
-                    {copiedField === `${credential.role}-email` ? 'Copiado' : 'Copiar'}
-                  </button>
-                </div>
-
-                <div className={styles.credentialRow}>
-                  <span>Contrasena</span>
-                  <div className={styles.credentialValue}>
-                    <code aria-label="Contrasena demo oculta">{demoPasswordMask}</code>
-                    <small>Oculta por seguridad</small>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => copyCredential(credential.password, `${credential.role}-password`)}
-                    className={styles.copyBtn}
-                  >
-                    {copiedField === `${credential.role}-password` ? 'Copiado' : 'Copiar'}
-                  </button>
-                </div>
+                <p>{credential.role === 'ADMIN' ? 'Configura programas, revisa sedes y consulta indicadores globales.' : 'Gestiona estudiantes y matrículas de la sede asignada.'}</p>
+                <button type="button" onClick={() => useDemoAccount(credential.email, credential.password)} className={styles.copyBtn}>{copiedField === credential.email ? 'Perfil seleccionado' : 'Usar este perfil'}</button>
               </div>
             ))}
           </div>

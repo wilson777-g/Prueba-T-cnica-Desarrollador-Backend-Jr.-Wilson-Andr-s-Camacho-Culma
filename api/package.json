@@ -1,16 +1,18 @@
 {
-  "name": "academic-management-api",
+  "name": "dna-music-academic-api",
   "version": "1.0.0",
-  "description": "Backend API para gestion de estudiantes por sede",
+  "description": "API institucional para programas, estudiantes y matrículas de DNA Music",
   "main": "dist/main.js",
   "scripts": {
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "prisma migrate deploy && node dist/main",
+    "postinstall": "prisma generate",
     "build": "nest build",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "ts-node prisma/seed.ts",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
@@ -26,6 +28,7 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.1.24",
     "@prisma/client": "^5.3.0",
+    "prisma": "^5.3.0",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "bcryptjs": "^2.4.3",
@@ -47,7 +50,6 @@
     "@types/bcryptjs": "^2.4.4",
     "@types/passport-jwt": "^3.0.13",
     "typescript": "^5.2.0",
-    "prisma": "^5.3.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.0",
     "ts-loader": "^9.5.0",
@@ -55,5 +57,12 @@
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
+  },
+  "jest": {
+    "moduleFileExtensions": ["js", "json", "ts"],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": { "^.+\\.(t|j)s$": "ts-jest" },
+    "testEnvironment": "node"
   }
 }

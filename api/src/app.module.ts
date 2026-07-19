@@ -7,6 +7,8 @@ import { SedesModule } from './modules/sedes/sedes.module';
 import { EstudiantesModule } from './modules/estudiantes/estudiantes.module';
 import { StatsModule } from './modules/stats/stats.module';
 import { AppController } from './app.controller';
+import { ProgramasModule } from './modules/programas/programas.module';
+import { MatriculasModule } from './modules/matriculas/matriculas.module';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { AppController } from './app.controller';
     SedesModule,
     EstudiantesModule,
     StatsModule,
+    ProgramasModule,
+    MatriculasModule,
   ],
   controllers: [AppController],
 })
