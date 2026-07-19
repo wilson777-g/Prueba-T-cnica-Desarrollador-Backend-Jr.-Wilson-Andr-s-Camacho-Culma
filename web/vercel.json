@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://dna-music-api-j323.onrender.com/api/:path*"
+      "destination": "https://academic-management-api-35mu.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",

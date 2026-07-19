@@ -8,8 +8,8 @@ El usuario final usa una sola URL publica:
 
 - Demo principal: `https://dna-music-web.vercel.app`
 - Verificación de API vía frontend: `https://dna-music-web.vercel.app/api/health`
-- Backend de infraestructura: `https://dna-music-api-j323.onrender.com`
-- Health directo: `https://dna-music-api-j323.onrender.com/api/health`
+- Backend de infraestructura: `https://academic-management-api-35mu.onrender.com`
+- Health directo: `https://academic-management-api-35mu.onrender.com/api/health`
 
 Vercel sirve el frontend y proxyea internamente `/api/*` hacia Render. Por eso el boton publico del demo debe apuntar al frontend, no al backend directo.
 
