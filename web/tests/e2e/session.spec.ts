@@ -21,6 +21,11 @@ test('operador no recibe navegación ni acceso administrativo', async ({ page })
   await page.getByLabel('Contrasena').fill('DemoOper123!');
   await page.getByRole('button', { name: 'Ingresar' }).click();
   await expect(page.getByRole('link', { name: 'Responsables' })).toHaveCount(0);
-  const response = await page.request.get('/api/administracion/operadores');
-  expect(response.status()).toBe(403);
+  // Ejecutar desde la página garantiza que se envíe la cookie HttpOnly de la
+  // sesión del operador; un APIRequestContext separado puede no compartirla.
+  const status = await page.evaluate(async () => {
+    const response = await fetch('/api/administracion/operadores', { credentials: 'include' });
+    return response.status;
+  });
+  expect(status).toBe(403);
 });
