@@ -58,7 +58,7 @@ npm run db:seed
 npm run start:dev
 ```
 
-En producción, `npm run start:prod` ejecuta primero `prisma migrate deploy`. La migración crea el catálogo académico inicial de forma idempotente y luego inicia NestJS.
+En producción, `npm run start:prod` ejecuta las migraciones antes de iniciar NestJS. Si detecta una base histórica sin tabla de migraciones (`P3005`), registra el baseline existente sin borrar datos y continúa con las migraciones complementarias.
 
 Frontend:
 
