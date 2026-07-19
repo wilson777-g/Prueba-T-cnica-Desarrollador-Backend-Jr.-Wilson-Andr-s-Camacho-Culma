@@ -46,8 +46,8 @@ class ApiService {
     this.api.interceptors.response.use(
       response => response,
       error => {
-        const isLoginPage = ['/login', '/login.html'].includes(window.location.pathname);
-        if (error.response?.status === 401 && !isLoginPage) {
+        const isPublicAuthPage = ['/login', '/login.html', '/recuperar-contrasena', '/restablecer-contrasena'].includes(window.location.pathname);
+        if (error.response?.status === 401 && !isPublicAuthPage) {
           localStorage.removeItem('user');
           sessionStorage.removeItem('csrf_token');
           window.location.replace('/login');
@@ -95,6 +95,16 @@ class ApiService {
   async changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
     const response = await this.api.post<{ message: string }>('/api/auth/change-password', { currentPassword, newPassword });
     localStorage.removeItem('user'); sessionStorage.removeItem('csrf_token');
+    return response.data;
+  }
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const response = await this.api.post<{ message: string }>('/api/auth/forgot-password', { email });
+    return response.data;
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    const response = await this.api.post<{ message: string }>('/api/auth/reset-password', { token, newPassword });
     return response.data;
   }
 

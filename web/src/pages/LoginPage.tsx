@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import apiService from '../services/api';
 import styles from '../styles/Auth.module.css';
+import recovery from '../styles/Recovery.module.css';
+import { Link } from 'react-router-dom';
 
 const warmUpServer = () => apiService.warmUp();
 
@@ -114,6 +116,7 @@ export const LoginPage: React.FC = () => {
           <button type="submit" disabled={loading} className={styles.submitBtn}>
             {loading ? 'Iniciando sesion...' : 'Ingresar'}
           </button>
+          <Link className={recovery.recoveryLink} to="/recuperar-contrasena">¿Olvidaste tu contraseña?</Link>
         </form>
 
         <div className={styles.testCreds}>

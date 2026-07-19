@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
 
+test('recuperación no revela si una cuenta existe', async ({ page }) => {
+  await page.goto('/recuperar-contrasena');
+  await page.getByLabel('Correo institucional').fill('cuenta.inexistente@example.test');
+  await page.getByRole('button', { name: 'Enviar instrucciones' }).click();
+  await expect(page.getByRole('status')).toContainText('Si el correo corresponde a una cuenta activa');
+});
+
 test('administrador inicia sesión con cookie HttpOnly y ve módulos de gobierno', async ({ page, context }) => {
   await page.goto('/login');
   await page.getByLabel('Email').fill('admin@example.test');

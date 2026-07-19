@@ -3,9 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
-import { randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
-import { AuthResponseDto, ChangePasswordDto, LoginDto, RegisterDto } from './dto/auth.dto';
+import { AuthResponseDto, ChangePasswordDto, ForgotPasswordDto, LoginDto, RegisterDto, ResetPasswordDto } from './dto/auth.dto';
 
 const DUMMY_PASSWORD_HASH = bcrypt.hashSync('invalid-password', 10);
 
@@ -158,5 +158,65 @@ export class AuthService {
       await tx.auditLog.create({ data: { userId, accion: 'CONTRASENA_CAMBIADA', entidad: 'User', entidadId: userId, detalle: { sesionesRevocadas: true } } });
     });
     return { message: 'Contraseña actualizada. Inicia sesión nuevamente.' };
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const genericResponse = { message: 'Si el correo corresponde a una cuenta activa, recibirás instrucciones para restablecer la contraseña.' };
+    const email = dto.email.toLowerCase().trim();
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user || !user.activo || user.deletedAt) return genericResponse;
+
+    const token = randomBytes(32).toString('base64url');
+    const resetTokenHash = createHash('sha256').update(token).digest('hex');
+    const resetTokenExpiresAt = new Date(Date.now() + 30 * 60 * 1000);
+    await this.prisma.user.update({ where: { id: user.id }, data: { resetTokenHash, resetTokenExpiresAt } });
+
+    const apiKey = this.configService.get<string>('RESEND_API_KEY');
+    if (!apiKey) {
+      console.error('RESEND_API_KEY no está configurada');
+      return genericResponse;
+    }
+
+    const appUrl = this.configService.get<string>('APP_URL') || 'https://dna-music-web.vercel.app';
+    const from = this.configService.get<string>('EMAIL_FROM') || 'DNA Music <onboarding@resend.dev>';
+    // Resend solo permite enviar al propietario de la cuenta mientras no haya dominio verificado.
+    const recipient = this.configService.get<string>('EMAIL_TEST_TO') || user.email;
+    const resetUrl = `${appUrl.replace(/\/$/, '')}/restablecer-contrasena?token=${encodeURIComponent(token)}`;
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from,
+          to: [recipient],
+          subject: 'Restablece tu contraseña de DNA Music',
+          html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#20272d"><h1 style="font-size:24px">Restablecimiento de contraseña</h1><p>Hola ${this.escapeHtml(user.nombre)},</p><p>Recibimos una solicitud para cambiar la contraseña de tu cuenta institucional.</p><p><a href="${resetUrl}" style="display:inline-block;background:#246b68;color:#fff;padding:12px 18px;text-decoration:none">Establecer nueva contraseña</a></p><p>Este enlace vence en 30 minutos y solo puede utilizarse una vez. Si no realizaste la solicitud, ignora este mensaje.</p></div>`,
+        }),
+      });
+      if (!response.ok) console.error(`Resend rechazó el correo de recuperación: ${response.status}`);
+    } catch (error) {
+      console.error('No fue posible contactar al proveedor de correo', error instanceof Error ? error.message : 'error');
+    }
+    return genericResponse;
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const resetTokenHash = createHash('sha256').update(dto.token).digest('hex');
+    const user = await this.prisma.user.findFirst({
+      where: { resetTokenHash, resetTokenExpiresAt: { gt: new Date() }, activo: true, deletedAt: null },
+    });
+    if (!user) throw new BadRequestException('El enlace no es válido o ya expiró');
+    if (await bcrypt.compare(dto.newPassword, user.password)) {
+      throw new BadRequestException('La nueva contraseña debe ser diferente de la anterior');
+    }
+    await this.prisma.$transaction(async tx => {
+      await tx.user.update({ where: { id: user.id }, data: { password: await bcrypt.hash(dto.newPassword, 12), resetTokenHash: null, resetTokenExpiresAt: null, tokenVersion: { increment: 1 }, mustChangePassword: false, intentosFallo: 0, bloqueadoHasta: null } });
+      await tx.auditLog.create({ data: { userId: user.id, accion: 'CONTRASENA_RESTABLECIDA', entidad: 'User', entidadId: user.id, detalle: { sesionesRevocadas: true, canal: 'correo' } } });
+    });
+    return { message: 'Contraseña actualizada. Ya puedes iniciar sesión.' };
+  }
+
+  private escapeHtml(value: string) {
+    return value.replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[character] || character);
   }
 }

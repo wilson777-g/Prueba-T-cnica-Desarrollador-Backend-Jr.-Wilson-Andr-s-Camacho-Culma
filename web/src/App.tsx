@@ -10,6 +10,8 @@ import { SedesPage } from './pages/SedesPage';
 import { OperadoresPage } from './pages/OperadoresPage';
 import { AuditoriaPage } from './pages/AuditoriaPage';
 import { SecurityPage } from './pages/SecurityPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import api from './services/api';
 
 function App() {
@@ -34,6 +36,8 @@ function App() {
       <Routes>
         <Route path="/login" element={loginRoute} />
         <Route path="/login.html" element={loginRoute} />
+        <Route path="/recuperar-contrasena" element={<ForgotPasswordPage />} />
+        <Route path="/restablecer-contrasena" element={<ResetPasswordPage />} />
         <Route path="/" element={isAuthenticated ? <Layout><DashboardPage /></Layout> : <Navigate to="/login" />} />
         <Route path="/estudiantes" element={isAuthenticated ? <Layout><EstudiantesPage /></Layout> : <Navigate to="/login" />} />
         <Route path="/programas" element={isAuthenticated ? <Layout><ProgramasPage /></Layout> : <Navigate to="/login" />} />

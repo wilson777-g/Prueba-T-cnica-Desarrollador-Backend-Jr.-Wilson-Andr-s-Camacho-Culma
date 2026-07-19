@@ -51,6 +51,22 @@ export class ChangePasswordDto {
   newPassword!: string;
 }
 
+export class ForgotPasswordDto {
+  @IsEmail({}, { message: 'Email debe ser valido' })
+  email!: string;
+}
+
+export class ResetPasswordDto {
+  @IsString() @MinLength(32) @MaxLength(256)
+  token!: string;
+
+  @IsString() @MinLength(12) @MaxLength(72)
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
+    message: 'La nueva contraseña debe incluir mayúscula, minúscula, número y carácter especial',
+  })
+  newPassword!: string;
+}
+
 export class AuthResponseDto {
   access_token!: string;
   csrf_token!: string;

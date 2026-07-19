@@ -47,6 +47,17 @@ async function bootstrap() {
   );
 
   app.use(
+    ['/api/auth/forgot-password', '/api/auth/reset-password'],
+    rateLimit({
+      windowMs: 60 * 60 * 1000,
+      max: process.env.NODE_ENV === 'test' ? 100 : 5,
+      message: 'Demasiadas solicitudes de recuperación. Intenta nuevamente más tarde.',
+      standardHeaders: true,
+      legacyHeaders: false,
+    }),
+  );
+
+  app.use(
     '/api/',
     rateLimit({
       windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
