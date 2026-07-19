@@ -14,6 +14,8 @@ import {
   Matricula,
   UpdateProgramaDTO,
   UpdateSedeDTO,
+  AuditResponse,
+  User,
 } from '../types';
 
 // La demo publica tiene un unico backend canonico. No usamos VITE_API_URL aqui
@@ -120,6 +122,26 @@ class ApiService {
 
   async getEstudianteById(id: string): Promise<Estudiante> {
     const response = await this.api.get<Estudiante>(`/api/estudiantes/${id}`);
+    return response.data;
+  }
+
+  async getOperadores(): Promise<User[]> {
+    const response = await this.api.get<User[]>('/api/administracion/operadores');
+    return response.data;
+  }
+
+  async createOperador(data: { nombre: string; email: string; sedeId: string; password: string }): Promise<User> {
+    const response = await this.api.post<User>('/api/administracion/operadores', data);
+    return response.data;
+  }
+
+  async updateOperador(id: string, data: { nombre?: string; sedeId?: string; activo?: boolean }): Promise<User> {
+    const response = await this.api.patch<User>(`/api/administracion/operadores/${id}`, data);
+    return response.data;
+  }
+
+  async getAudit(params?: { entidad?: string; page?: number; limit?: number }): Promise<AuditResponse> {
+    const response = await this.api.get<AuditResponse>('/api/administracion/auditoria', { params });
     return response.data;
   }
 
