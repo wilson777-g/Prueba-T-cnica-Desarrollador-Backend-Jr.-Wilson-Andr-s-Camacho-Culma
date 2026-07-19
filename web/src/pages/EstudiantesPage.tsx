@@ -10,8 +10,6 @@ const initialPagination: Pagination = {
   totalPages: 1,
 };
 
-const isDemoMode = import.meta.env.VITE_DEMO_MODE?.trim().toLowerCase() === 'true';
-
 type ApiErrorResponse = {
   response?: {
     data?: {
@@ -44,6 +42,7 @@ export const EstudiantesPage: React.FC = () => {
   const [pagination, setPagination] = useState<Pagination>(initialPagination);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingEstudianteId, setEditingEstudianteId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Estudiante | null>(null);
@@ -203,7 +202,7 @@ export const EstudiantesPage: React.FC = () => {
   };
 
   const handleDeleteEstudiante = async (estudiante: Estudiante) => {
-    if (!isAdmin || isDemoMode) {
+    if (!isAdmin) {
       return;
     }
 
@@ -229,6 +228,7 @@ export const EstudiantesPage: React.FC = () => {
       setDeleting(true);
       await apiService.deleteEstudiante(deleteTarget.id);
       setError('');
+      setNotice(`${deleteTarget.nombreCompleto} fue retirado del registro activo.`);
       setPage(current => (current > 1 && estudiantes.length === 1 ? current - 1 : current));
       setRefreshKey(current => current + 1);
       setDeleteTarget(null);
@@ -249,6 +249,7 @@ export const EstudiantesPage: React.FC = () => {
       setSuspending(true);
       await apiService.suspenderEstudiante(suspendTarget.id);
       setError('');
+      setNotice(`${suspendTarget.nombreCompleto} quedó en estado inactivo.`);
       setRefreshKey(current => current + 1);
       setSuspendTarget(null);
     } catch (err: unknown) {
@@ -292,6 +293,8 @@ export const EstudiantesPage: React.FC = () => {
         await apiService.createEstudiante(estudianteData);
       }
 
+      setNotice(editingEstudianteId ? 'Los datos del estudiante fueron actualizados.' : 'El estudiante fue registrado correctamente.');
+
       resetForm();
       setShowForm(false);
       setPage(1);
@@ -310,12 +313,7 @@ export const EstudiantesPage: React.FC = () => {
       <h2>Gestion de Estudiantes</h2>
 
       {error && <div className={styles.error}>{error}</div>}
-
-      {isDemoMode && (
-        <div className={styles.demoNotice}>
-          Demo publica: algunas acciones destructivas estan limitadas.
-        </div>
-      )}
+      {notice && <div className={styles.success}>{notice}</div>}
 
       <div className={styles.controlsSection}>
         <div className={styles.filters}>
@@ -503,23 +501,13 @@ export const EstudiantesPage: React.FC = () => {
                             {getSuspendDisabledLabel(estudiante.estado)}
                           </button>
                         )}
-                        {isDemoMode ? (
-                          <button
-                            type="button"
-                            className={`${styles.btnAction} ${styles.btnDisabled}`}
-                            disabled
-                          >
-                            Demo sin eliminar
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteEstudiante(estudiante)}
-                            className={`${styles.btnAction} ${styles.btnDelete}`}
-                          >
-                            Eliminar
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteEstudiante(estudiante)}
+                          className={`${styles.btnAction} ${styles.btnDelete}`}
+                        >
+                          Eliminar
+                        </button>
                       </div>
                     </td>
                   )}
@@ -614,7 +602,7 @@ export const EstudiantesPage: React.FC = () => {
               <span className={styles.modalEyebrow}>Confirmar eliminacion</span>
               <h3 id="delete-title">Eliminar estudiante</h3>
               <p>
-                Esta accion desactivara el registro de <strong>{deleteTarget.nombreCompleto}</strong>.
+                Esta acción retirará a <strong>{deleteTarget.nombreCompleto}</strong> de los listados operativos. Su historial se conservará para auditoría.
               </p>
             </div>
             <div className={styles.modalActions}>
