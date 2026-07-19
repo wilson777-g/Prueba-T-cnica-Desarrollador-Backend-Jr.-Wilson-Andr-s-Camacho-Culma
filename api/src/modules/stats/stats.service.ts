@@ -18,6 +18,9 @@ export class StatsService {
       totalEstudiantes,
       totalSedes,
       totalUsuarios,
+      matriculasPorEstado,
+      programasActivos,
+      actividadReciente,
     ] = await Promise.all([
       this.prisma.sede.findMany({
         select: {
@@ -70,6 +73,9 @@ export class StatsService {
       this.prisma.user.count({
         where: { activo: true, deletedAt: null },
       }),
+      this.prisma.matricula.groupBy({ by: ['estado'], _count: { id: true } }),
+      this.prisma.programa.count({ where: { estado: 'ACTIVO' } }),
+      this.prisma.auditLog.findMany({ include: { user: { select: { nombre: true } } }, orderBy: { createdAt: 'desc' }, take: 8 }),
     ]);
 
     const sedeConMasActivos = sedeActivaMasPoblada[0]
@@ -88,6 +94,8 @@ export class StatsService {
         totalEstudiantes,
         totalSedes,
         totalUsuarios,
+        programasActivos,
+        totalMatriculas: matriculasPorEstado.reduce((total, item) => total + item._count.id, 0),
       },
       estudiantesPorSede: estudiantesPorSede.map(sede => ({
         sedeId: sede.id,
@@ -99,6 +107,11 @@ export class StatsService {
         acc[item.estado] = item._count.id;
         return acc;
       }, {} as Record<string, number>),
+      matriculasPorEstado: matriculasPorEstado.reduce((acc, item) => {
+        acc[item.estado] = item._count.id;
+        return acc;
+      }, {} as Record<string, number>),
+      actividadReciente,
       sedeConMasEstudiantesActivos:
         sedeConMasActivos && sedeActivaMasPoblada[0]
           ? {
