@@ -29,14 +29,14 @@ export function DashboardPage() {
         <article><span>Estudiantes registrados</span><strong>{stats?.resumen.totalEstudiantes ?? '—'}</strong><small>Registros vigentes</small></article>
         <article><span>Matrículas activas</span><strong>{active}</strong><small>En la sede autorizada</small></article>
         <article><span>Sedes activas</span><strong>{stats?.resumen.totalSedes ?? '—'}</strong><small>Operación multisede</small></article>
-        <article><span>Programas con matrícula</span><strong>{new Set(matriculas.map(item => item.programaId)).size}</strong><small>Oferta utilizada</small></article>
+        <article><span>Programas activos</span><strong>{stats?.resumen.programasActivos ?? new Set(matriculas.map(item => item.programaId)).size}</strong><small>Oferta académica disponible</small></article>
       </div>
       <div className={styles.panelGrid}>
         <article className={styles.panel}><div className={styles.panelTitle}><div><h3>Actividad reciente</h3><p>Últimas matrículas registradas</p></div></div>
           <div className={styles.activity}>{matriculas.slice(0, 6).map(item => <div key={item.id}><span className={styles.initial}>{item.estudiante.nombreCompleto.charAt(0)}</span><div><strong>{item.estudiante.nombreCompleto}</strong><small>{item.programa.nombre} · {item.sede.nombre}</small></div><time>{new Date(item.fechaMatricula).toLocaleDateString('es-CO')}</time></div>)}{!matriculas.length && <p className={styles.empty}>Aún no hay matrículas registradas.</p>}</div>
         </article>
-        <article className={styles.panel}><div className={styles.panelTitle}><div><h3>Estado académico</h3><p>Distribución de estudiantes</p></div></div>
-          <div className={styles.statusList}>{Object.entries(stats?.estudiantesPorEstado || {}).map(([label, value]) => <div key={label}><span>{label.toLowerCase()}</span><strong>{value}</strong></div>)}{!stats && <p className={styles.empty}>Disponible para administración general.</p>}</div>
+        <article className={styles.panel}><div className={styles.panelTitle}><div><h3>Control operativo</h3><p>Estudiantes y matrículas por estado</p></div></div>
+          <div className={styles.statusList}>{Object.entries(stats?.estudiantesPorEstado || {}).map(([label, value]) => <div key={`student-${label}`}><span>Estudiantes {label.toLowerCase()}</span><strong>{value}</strong></div>)}{Object.entries(stats?.matriculasPorEstado || {}).map(([label,value])=><div key={`enrollment-${label}`}><span>Matrículas {label.toLowerCase()}</span><strong>{value}</strong></div>)}{!stats && <p className={styles.empty}>Disponible para administración general.</p>}</div>
         </article>
       </div>
     </section>
