@@ -46,10 +46,11 @@ class ApiService {
     this.api.interceptors.response.use(
       response => response,
       error => {
-        if (error.response?.status === 401) {
+        const isLoginPage = ['/login', '/login.html'].includes(window.location.pathname);
+        if (error.response?.status === 401 && !isLoginPage) {
           localStorage.removeItem('user');
           sessionStorage.removeItem('csrf_token');
-          window.location.href = '/login';
+          window.location.replace('/login');
         }
         return Promise.reject(error);
       },
