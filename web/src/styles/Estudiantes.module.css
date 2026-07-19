@@ -19,6 +19,16 @@
   font-weight: 700;
 }
 
+.success {
+  margin-bottom: 1rem;
+  padding: 0.95rem 1rem;
+  border-left: 4px solid #347757;
+  border-radius: 8px;
+  background-color: #edf7f1;
+  color: #285f45;
+  font-weight: 700;
+}
+
 .demoNotice {
   margin-bottom: 1rem;
   padding: 0.9rem 1rem;
