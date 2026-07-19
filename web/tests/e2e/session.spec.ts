@@ -20,6 +20,7 @@ test('operador no recibe navegación ni acceso administrativo', async ({ page })
   await page.getByLabel('Email').fill('operador.bogota@example.test');
   await page.getByLabel('Contrasena').fill('DemoOper123!');
   await page.getByRole('button', { name: 'Ingresar' }).click();
+  await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('link', { name: 'Responsables' })).toHaveCount(0);
   // Ejecutar desde la página garantiza que se envíe la cookie HttpOnly de la
   // sesión del operador; un APIRequestContext separado puede no compartirla.
