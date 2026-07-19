@@ -47,6 +47,7 @@ export interface Estudiante {
   estado: 'ACTIVO' | 'INACTIVO' | 'RETIRADO';
   fechaInscripcion: string;
   sede?: Sede;
+  matriculas?: Matricula[];
 }
 
 export interface Pagination {
@@ -124,3 +125,6 @@ export interface Matricula {
   programa: Programa;
   sede: Sede;
 }
+
+export type UpdateProgramaDTO = Partial<Pick<Programa, 'nombre' | 'descripcion' | 'duracionMeses' | 'modalidad' | 'estado'>>;
+export type UpdateSedeDTO = Partial<Pick<Sede, 'nombre' | 'ciudad' | 'direccion' | 'estado'>>;
