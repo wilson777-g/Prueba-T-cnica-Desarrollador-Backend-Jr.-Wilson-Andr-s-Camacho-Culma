@@ -4,6 +4,10 @@ export interface User {
   nombre: string;
   rol: 'ADMIN' | 'OPERADOR';
   sedeId?: string;
+  sede?: Sede;
+  activo?: boolean;
+  ultimoLogin?: string | null;
+  createdAt?: string;
 }
 
 export interface AuthResponse {
@@ -86,6 +90,8 @@ export interface Stats {
     totalEstudiantes: number;
     totalSedes: number;
     totalUsuarios: number;
+    programasActivos: number;
+    totalMatriculas: number;
   };
   estudiantesPorSede: Array<{
     sedeId: string;
@@ -94,6 +100,8 @@ export interface Stats {
     cantidad: number;
   }>;
   estudiantesPorEstado: Record<string, number>;
+  matriculasPorEstado: Record<string, number>;
+  actividadReciente: AuditLog[];
   sedeConMasEstudiantesActivos: {
     sedeId: string;
     sedeName: string;
@@ -101,6 +109,18 @@ export interface Stats {
     estudiantesActivos: number;
   } | null;
 }
+
+export interface AuditLog {
+  id: string;
+  accion: string;
+  entidad: string;
+  entidadId: string;
+  detalle?: Record<string, unknown>;
+  createdAt: string;
+  user: { nombre: string; email?: string };
+}
+
+export interface AuditResponse { data: AuditLog[]; pagination: Pagination; }
 
 export interface Programa {
   id: string;
