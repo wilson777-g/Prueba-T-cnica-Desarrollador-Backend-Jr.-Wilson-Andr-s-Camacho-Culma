@@ -109,7 +109,7 @@ export class EstudiantesService {
 
     const estudiante = await this.prisma.estudiante.findUnique({
       where: { id },
-      include: { sede: true },
+      include: { sede: true, matriculas: { include: { programa: true, sede: true }, orderBy: { fechaMatricula: 'desc' } } },
     });
 
     if (!estudiante || estudiante.deletedAt) {
