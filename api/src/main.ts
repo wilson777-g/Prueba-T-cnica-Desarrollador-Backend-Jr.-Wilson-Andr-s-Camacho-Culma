@@ -3,6 +3,8 @@ import { NestFactory } from '@nestjs/core';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { AppModule } from './app.module';
+import { randomUUID } from 'crypto';
+import { HttpExceptionFilter } from './common/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -10,6 +12,12 @@ async function bootstrap() {
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
 
   app.use(helmet());
+  app.use((request: any, response: any, next: () => void) => {
+    request.requestId = request.headers['x-request-id'] || randomUUID();
+    response.setHeader('X-Request-Id', request.requestId);
+    next();
+  });
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   const allowedOrigins = Array.from(
     new Set([

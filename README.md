@@ -1,5 +1,7 @@
 # DNA Music - Plataforma de Gestión Académica Multisede
 
+> Documentación técnica: [arquitectura, permisos y operación](docs/ARCHITECTURE.md) · [política de seguridad](SECURITY.md)
+
 Aplicación institucional para gestionar estudiantes, programas de formación musical y matrículas por sede y periodo. El repositorio separa `api/` (NestJS, Prisma y PostgreSQL) de `web/` (React y Vite).
 
 ## Demo publica
