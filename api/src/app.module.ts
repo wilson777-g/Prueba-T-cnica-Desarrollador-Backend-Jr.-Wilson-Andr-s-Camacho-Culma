@@ -9,6 +9,7 @@ import { StatsModule } from './modules/stats/stats.module';
 import { AppController } from './app.controller';
 import { ProgramasModule } from './modules/programas/programas.module';
 import { MatriculasModule } from './modules/matriculas/matriculas.module';
+import { AdministracionModule } from './modules/administracion/administracion.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { MatriculasModule } from './modules/matriculas/matriculas.module';
     StatsModule,
     ProgramasModule,
     MatriculasModule,
+    AdministracionModule,
   ],
   controllers: [AppController],
 })
