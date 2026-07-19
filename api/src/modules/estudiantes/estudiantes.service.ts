@@ -1,5 +1,4 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEstudianteDto, FilterEstudiantesDto, UpdateEstudianteDto } from './dto/estudiante.dto';
@@ -7,10 +6,7 @@ import { AuthenticatedUser } from '../../types/authenticated-user';
 
 @Injectable()
 export class EstudiantesService {
-  constructor(
-    private prisma: PrismaService,
-    private configService: ConfigService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async create(createEstudianteDto: CreateEstudianteDto, user: AuthenticatedUser) {
     this.assertOperatorHasSede(user);
@@ -159,16 +155,22 @@ export class EstudiantesService {
   }
 
   async delete(id: string, user: AuthenticatedUser) {
-    if (this.configService.get<string>('DEMO_MODE') === 'true') {
-      throw new ForbiddenException('Operacion deshabilitada en demo publica');
-    }
-
     await this.findById(id, user);
 
     const deleted = await this.prisma.estudiante.update({
       where: { id },
       data: { deletedAt: new Date() },
       include: { sede: true },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        userId: user.id,
+        accion: 'ESTUDIANTE_ELIMINADO',
+        entidad: 'Estudiante',
+        entidadId: id,
+        detalle: { nombreCompleto: deleted.nombreCompleto, documento: deleted.documento },
+      },
     });
 
     return {
