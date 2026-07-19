@@ -14,8 +14,10 @@ import {
   Matricula,
 } from '../types';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL?.trim() || 'https://academic-management-api-35mu.onrender.com';
+// La demo publica tiene un unico backend canonico. No usamos VITE_API_URL aqui
+// porque una variable antigua en Vercel apuntaba a un servicio retirado y
+// bloqueaba el inicio de sesion aun cuando Render estaba saludable.
+const API_BASE_URL = 'https://academic-management-api-35mu.onrender.com';
 
 class ApiService {
   private api: AxiosInstance;
