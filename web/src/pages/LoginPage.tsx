@@ -51,14 +51,13 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      await warmUpServer();
       await apiService.login(email, password);
       window.location.href = '/';
     } catch (err: unknown) {
       const statusCode = getStatusCode(err);
 
       if (!statusCode || statusCode >= 500) {
-        setError('El servicio esta iniciando. Intenta nuevamente en unos segundos.');
+        setError('El servidor gratuito tardó demasiado en responder. Espera unos segundos y vuelve a intentarlo.');
       } else {
         setError('No fue posible iniciar sesion. Revisa las credenciales e intenta nuevamente.');
       }

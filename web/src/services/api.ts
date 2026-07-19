@@ -22,7 +22,7 @@ class ApiService {
   constructor() {
     this.api = axios.create({
       baseURL: API_BASE_URL,
-      timeout: 10000,
+      timeout: 65000,
     });
 
     // Interceptor para agregar token a todas las requests
@@ -57,7 +57,7 @@ class ApiService {
 
   async warmUp(): Promise<void> {
     await this.api.get('/api/health', {
-      timeout: 30000,
+      timeout: 60000,
       validateStatus: status => status < 500,
     });
   }
