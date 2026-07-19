@@ -12,6 +12,8 @@ import {
   VerifyResponse,
   Programa,
   Matricula,
+  UpdateProgramaDTO,
+  UpdateSedeDTO,
 } from '../types';
 
 // La demo publica tiene un unico backend canonico. No usamos VITE_API_URL aqui
@@ -98,6 +100,16 @@ class ApiService {
     return response.data;
   }
 
+  async createSede(data: Pick<Sede, 'nombre' | 'ciudad' | 'direccion'>): Promise<Sede> {
+    const response = await this.api.post<Sede>('/api/sedes', data);
+    return response.data;
+  }
+
+  async updateSede(id: string, data: UpdateSedeDTO): Promise<Sede> {
+    const response = await this.api.put<Sede>(`/api/sedes/${id}`, data);
+    return response.data;
+  }
+
   // ============================================
   // ESTUDIANTES
   // ============================================
@@ -149,6 +161,11 @@ class ApiService {
     return response.data;
   }
 
+  async updatePrograma(id: string, data: UpdateProgramaDTO): Promise<Programa> {
+    const response = await this.api.put<Programa>(`/api/programas/${id}`, data);
+    return response.data;
+  }
+
   async getMatriculas(params?: Record<string, string | undefined>): Promise<Matricula[]> {
     const response = await this.api.get<Matricula[]>('/api/matriculas', { params });
     return response.data;
@@ -156,6 +173,11 @@ class ApiService {
 
   async createMatricula(data: Pick<Matricula, 'estudianteId' | 'programaId' | 'sedeId' | 'periodo'>): Promise<Matricula> {
     const response = await this.api.post<Matricula>('/api/matriculas', data);
+    return response.data;
+  }
+
+  async updateMatriculaEstado(id: string, estado: Matricula['estado']): Promise<Matricula> {
+    const response = await this.api.patch<Matricula>(`/api/matriculas/${id}/estado`, { estado });
     return response.data;
   }
 }
