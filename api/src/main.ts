@@ -7,6 +7,8 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
+
   app.use(helmet());
 
   const allowedOrigins = Array.from(
@@ -23,6 +25,18 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
+
+  app.use(
+    '/api/auth/login',
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 10,
+      skipSuccessfulRequests: true,
+      message: 'Demasiados intentos de acceso. Intenta nuevamente en 15 minutos.',
+      standardHeaders: true,
+      legacyHeaders: false,
+    }),
+  );
 
   app.use(
     '/api/',

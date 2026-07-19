@@ -7,6 +7,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 type JwtPayload = {
   sub: string;
   email?: string;
+  ver?: number;
 };
 
 @Injectable()
@@ -33,10 +34,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         sedeId: true,
         activo: true,
         deletedAt: true,
+        tokenVersion: true,
       },
     });
 
-    if (!user || !user.activo || user.deletedAt) {
+    if (!user || !user.activo || user.deletedAt || payload.ver !== user.tokenVersion) {
       throw new UnauthorizedException('Token invalido o usuario inactivo');
     }
 

@@ -1,6 +1,6 @@
 import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto } from './dto/auth.dto';
+import { RegisterDto, LoginDto, ChangePasswordDto } from './dto/auth.dto';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { AdminGuard } from '../../guards/admin.guard';
 import { AuthenticatedUser } from '../../types/authenticated-user';
@@ -27,5 +27,11 @@ export class AuthController {
       message: 'Token valido',
       user: req.user,
     };
+  }
+
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  changePassword(@Body() dto: ChangePasswordDto, @Request() req: { user: AuthenticatedUser }) {
+    return this.authService.changePassword(req.user.id, dto);
   }
 }

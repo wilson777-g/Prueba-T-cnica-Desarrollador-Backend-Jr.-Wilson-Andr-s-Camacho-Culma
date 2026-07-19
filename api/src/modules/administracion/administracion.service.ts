@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditFilterDto, CreateOperadorDto, UpdateOperadorDto } from './dto/administracion.dto';
+import { AuthenticatedUser } from '../../types/authenticated-user';
 
 @Injectable()
 export class AdministracionService {
@@ -16,13 +17,14 @@ export class AdministracionService {
     });
   }
 
-  async createOperador(dto: CreateOperadorDto) {
+  async createOperador(dto: CreateOperadorDto, actor: AuthenticatedUser) {
     const sede = await this.prisma.sede.findUnique({ where: { id: dto.sedeId } });
     if (!sede || sede.estado !== 'ACTIVA') throw new BadRequestException('La sede seleccionada no está disponible');
     try {
-      return await this.prisma.user.create({
-        data: { nombre: dto.nombre.trim(), email: dto.email.toLowerCase().trim(), password: await bcrypt.hash(dto.password, 10), rol: 'OPERADOR', sedeId: dto.sedeId },
-        select: { id: true, nombre: true, email: true, rol: true, sedeId: true, sede: true, activo: true, createdAt: true },
+      return await this.prisma.$transaction(async tx => {
+        const created = await tx.user.create({ data: { nombre: dto.nombre.trim(), email: dto.email.toLowerCase().trim(), password: await bcrypt.hash(dto.password, 12), rol: 'OPERADOR', sedeId: dto.sedeId }, select: { id: true, nombre: true, email: true, rol: true, sedeId: true, sede: true, activo: true, createdAt: true } });
+        await tx.auditLog.create({ data: { userId: actor.id, accion: 'OPERADOR_CREADO', entidad: 'User', entidadId: created.id, detalle: { email: created.email, sedeId: created.sedeId } } });
+        return created;
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') throw new BadRequestException('El correo ya está registrado');
@@ -30,14 +32,18 @@ export class AdministracionService {
     }
   }
 
-  async updateOperador(id: string, dto: UpdateOperadorDto) {
+  async updateOperador(id: string, dto: UpdateOperadorDto, actor: AuthenticatedUser) {
     const current = await this.prisma.user.findFirst({ where: { id, rol: 'OPERADOR', deletedAt: null } });
     if (!current) throw new NotFoundException('Operador no encontrado');
     if (dto.sedeId) {
       const sede = await this.prisma.sede.findUnique({ where: { id: dto.sedeId } });
       if (!sede || sede.estado !== 'ACTIVA') throw new BadRequestException('La sede seleccionada no está disponible');
     }
-    return this.prisma.user.update({ where: { id }, data: { nombre: dto.nombre?.trim(), sedeId: dto.sedeId, activo: dto.activo }, select: { id: true, nombre: true, email: true, rol: true, sedeId: true, sede: true, activo: true, ultimoLogin: true, createdAt: true } });
+    return this.prisma.$transaction(async tx => {
+      const updated = await tx.user.update({ where: { id }, data: { nombre: dto.nombre?.trim(), sedeId: dto.sedeId, activo: dto.activo, ...(dto.activo === false ? { tokenVersion: { increment: 1 } } : {}) }, select: { id: true, nombre: true, email: true, rol: true, sedeId: true, sede: true, activo: true, ultimoLogin: true, createdAt: true } });
+      await tx.auditLog.create({ data: { userId: actor.id, accion: 'OPERADOR_ACTUALIZADO', entidad: 'User', entidadId: id, detalle: { activoAnterior: current.activo, activoNuevo: updated.activo, sedeAnterior: current.sedeId, sedeNueva: updated.sedeId } } });
+      return updated;
+    });
   }
 
   async audit(filters: AuditFilterDto) {

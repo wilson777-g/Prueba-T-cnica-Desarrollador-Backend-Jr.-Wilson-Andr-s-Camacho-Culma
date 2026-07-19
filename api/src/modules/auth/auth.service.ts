@@ -4,7 +4,7 @@ import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
-import { AuthResponseDto, LoginDto, RegisterDto } from './dto/auth.dto';
+import { AuthResponseDto, ChangePasswordDto, LoginDto, RegisterDto } from './dto/auth.dto';
 
 const DUMMY_PASSWORD_HASH = bcrypt.hashSync('invalid-password', 10);
 
@@ -111,6 +111,7 @@ export class AuthService {
         email: user.email,
         rol: user.rol,
         sedeId: user.sedeId,
+        ver: user.tokenVersion,
       },
       {
         subject: user.id,
@@ -136,5 +137,20 @@ export class AuthService {
     } catch {
       throw new UnauthorizedException('Token invalido o expirado');
     }
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !(await bcrypt.compare(dto.currentPassword, user.password))) {
+      throw new UnauthorizedException('La contraseña actual no es válida');
+    }
+    if (await bcrypt.compare(dto.newPassword, user.password)) {
+      throw new BadRequestException('La nueva contraseña debe ser diferente de la actual');
+    }
+    await this.prisma.$transaction(async tx => {
+      await tx.user.update({ where: { id: userId }, data: { password: await bcrypt.hash(dto.newPassword, 12), tokenVersion: { increment: 1 } } });
+      await tx.auditLog.create({ data: { userId, accion: 'CONTRASENA_CAMBIADA', entidad: 'User', entidadId: userId, detalle: { sesionesRevocadas: true } } });
+    });
+    return { message: 'Contraseña actualizada. Inicia sesión nuevamente.' };
   }
 }

@@ -42,6 +42,15 @@ export class LoginDto {
   password!: string;
 }
 
+export class ChangePasswordDto {
+  @IsString() @MinLength(1) currentPassword!: string;
+  @IsString() @MinLength(12) @MaxLength(72)
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
+    message: 'La nueva contraseña debe incluir mayúscula, minúscula, número y carácter especial',
+  })
+  newPassword!: string;
+}
+
 export class AuthResponseDto {
   access_token!: string;
   user!: {

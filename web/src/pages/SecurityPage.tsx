@@ -1,0 +1,9 @@
+import { FormEvent, useState } from 'react';
+import api from '../services/api';
+import styles from '../styles/Workspace.module.css';
+
+export function SecurityPage(){
+  const [form,setForm]=useState({currentPassword:'',newPassword:'',confirmation:''}); const [error,setError]=useState(''); const [saving,setSaving]=useState(false);
+  const submit=async(e:FormEvent)=>{e.preventDefault();setError('');if(form.newPassword!==form.confirmation){setError('La confirmación no coincide.');return;}try{setSaving(true);await api.changePassword(form.currentPassword,form.newPassword);window.location.href='/login';}catch(err:any){setError(err.response?.data?.message||'No fue posible cambiar la contraseña.');}finally{setSaving(false);}};
+  return <section className={styles.page}><header className={styles.pageHeader}><div><span className={styles.eyebrow}>SEGURIDAD DE LA CUENTA</span><h2>Cambiar contraseña</h2><p>La actualización revoca todas las sesiones y exige un nuevo inicio de sesión.</p></div></header>{error&&<div className={styles.error}>{error}</div>}<form className={styles.formPanel} onSubmit={submit}><label>Contraseña actual<input type="password" autoComplete="current-password" value={form.currentPassword} onChange={e=>setForm({...form,currentPassword:e.target.value})} required/></label><label>Nueva contraseña<input type="password" autoComplete="new-password" minLength={12} value={form.newPassword} onChange={e=>setForm({...form,newPassword:e.target.value})} required/></label><label>Confirmar contraseña<input type="password" autoComplete="new-password" minLength={12} value={form.confirmation} onChange={e=>setForm({...form,confirmation:e.target.value})} required/></label><button className={styles.primary} disabled={saving}>{saving?'Actualizando…':'Actualizar y cerrar sesiones'}</button></form><p>Debe tener mínimo 12 caracteres e incluir mayúscula, minúscula, número y carácter especial.</p></section>;
+}

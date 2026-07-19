@@ -89,6 +89,12 @@ class ApiService {
     return response.data;
   }
 
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
+    const response = await this.api.post<{ message: string }>('/api/auth/change-password', { currentPassword, newPassword });
+    localStorage.removeItem('token'); localStorage.removeItem('user');
+    return response.data;
+  }
+
   // ============================================
   // SEDES
   // ============================================

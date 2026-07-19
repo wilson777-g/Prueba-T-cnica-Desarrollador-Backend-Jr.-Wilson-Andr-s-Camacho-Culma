@@ -9,6 +9,7 @@ import { MatriculasPage } from './pages/MatriculasPage';
 import { SedesPage } from './pages/SedesPage';
 import { OperadoresPage } from './pages/OperadoresPage';
 import { AuditoriaPage } from './pages/AuditoriaPage';
+import { SecurityPage } from './pages/SecurityPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -38,6 +39,7 @@ function App() {
         <Route path="/sedes" element={isAuthenticated ? <Layout><SedesPage /></Layout> : <Navigate to="/login" />} />
         <Route path="/operadores" element={isAuthenticated ? <Layout><OperadoresPage /></Layout> : <Navigate to="/login" />} />
         <Route path="/auditoria" element={isAuthenticated ? <Layout><AuditoriaPage /></Layout> : <Navigate to="/login" />} />
+        <Route path="/seguridad" element={isAuthenticated ? <Layout><SecurityPage /></Layout> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );
