@@ -249,6 +249,101 @@
   flex-wrap: wrap;
 }
 
+.actionMenu {
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.actionMenuTrigger {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid #b8c6d1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #183b4e;
+  cursor: pointer;
+  font-size: 1.25rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.actionMenuTrigger:hover,
+.actionMenuTrigger[aria-expanded='true'] {
+  border-color: #1d4ed8;
+  background: #eff6ff;
+  transform: rotate(12deg);
+}
+
+.actionMenuTrigger:focus-visible,
+.actionMenuPanel button:focus-visible {
+  outline: 3px solid rgba(29, 78, 216, 0.28);
+  outline-offset: 2px;
+}
+
+.actionMenuPanel {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  right: 0;
+  z-index: 20;
+  display: grid;
+  width: 178px;
+  padding: 0.45rem;
+  border: 1px solid #d7dce5;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.2);
+}
+
+.actionMenuPanel button,
+.menuDisabled {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  width: 100%;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #263142;
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-align: left;
+}
+
+.actionMenuPanel button {
+  cursor: pointer;
+}
+
+.actionMenuPanel button:hover {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.actionMenuPanel .menuWarning {
+  color: #9a6705;
+}
+
+.actionMenuPanel .menuWarning:hover {
+  background: #fffbeb;
+  color: #854d0e;
+}
+
+.actionMenuPanel .menuDanger {
+  color: #be123c;
+}
+
+.actionMenuPanel .menuDanger:hover {
+  background: #fff1f2;
+  color: #9f1239;
+}
+
+.menuDisabled {
+  color: #7b8490;
+  cursor: not-allowed;
+}
+
 .btnAction {
   min-height: 38px;
   padding: 0 0.85rem;
@@ -544,5 +639,11 @@
   .btnModalDanger,
   .btnModalWarning {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .actionMenuTrigger {
+    transition: none;
   }
 }

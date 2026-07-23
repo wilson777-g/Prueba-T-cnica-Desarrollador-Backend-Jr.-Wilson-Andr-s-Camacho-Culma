@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import apiService from '../services/api';
 import { CreateEstudianteDTO, Estudiante, Pagination, Sede, User } from '../types';
 import styles from '../styles/Estudiantes.module.css';
@@ -33,6 +33,76 @@ const getSuspendDisabledLabel = (estado: Estudiante['estado']) =>
 
 type EstudianteFormData = CreateEstudianteDTO & {
   estado: Estudiante['estado'];
+};
+
+type StudentActionsProps = {
+  estudiante: Estudiante;
+  profileLoading: boolean;
+  onView: () => void;
+  onEdit: () => void;
+  onSuspend: () => void;
+  onDelete: () => void;
+};
+
+const StudentActions: React.FC<StudentActionsProps> = ({
+  estudiante,
+  profileLoading,
+  onView,
+  onEdit,
+  onSuspend,
+  onDelete,
+}) => {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuId = `student-actions-${estudiante.id}`;
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const closeOutside = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', closeOutside);
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('mousedown', closeOutside);
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [open]);
+
+  const runAction = (action: () => void) => {
+    setOpen(false);
+    action();
+  };
+
+  return (
+    <div className={styles.actionMenu} ref={menuRef}>
+      <button
+        type="button"
+        className={styles.actionMenuTrigger}
+        aria-label={`Acciones para ${estudiante.nombreCompleto}`}
+        aria-expanded={open}
+        aria-controls={menuId}
+        onClick={() => setOpen(current => !current)}
+      >
+        <span aria-hidden="true">⚙</span>
+      </button>
+      {open && (
+        <div id={menuId} className={styles.actionMenuPanel} role="menu">
+          <button type="button" role="menuitem" onClick={() => runAction(onView)} disabled={profileLoading}>Ver ficha</button>
+          <button type="button" role="menuitem" onClick={() => runAction(onEdit)}>Editar</button>
+          {estudiante.estado === 'ACTIVO' ? (
+            <button type="button" role="menuitem" className={styles.menuWarning} onClick={() => runAction(onSuspend)}>Suspender</button>
+          ) : (
+            <span className={styles.menuDisabled}>{getSuspendDisabledLabel(estudiante.estado)}</span>
+          )}
+          <button type="button" role="menuitem" className={styles.menuDanger} onClick={() => runAction(onDelete)}>Eliminar</button>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export const EstudiantesPage: React.FC = () => {
@@ -485,40 +555,14 @@ export const EstudiantesPage: React.FC = () => {
                   <td>{new Date(estudiante.fechaInscripcion).toLocaleDateString()}</td>
                   {isAdmin && (
                     <td>
-                      <div className={styles.actionButtons}>
-                        <button type="button" onClick={() => void openProfile(estudiante)} className={`${styles.btnAction} ${styles.btnEdit}`} disabled={profileLoading}>Ver ficha</button>
-                        <button
-                          type="button"
-                          onClick={() => handleEditEstudiante(estudiante)}
-                          className={`${styles.btnAction} ${styles.btnEdit}`}
-                        >
-                          Editar
-                        </button>
-                        {estudiante.estado === 'ACTIVO' ? (
-                          <button
-                            type="button"
-                            onClick={() => handleSuspendEstudiante(estudiante)}
-                            className={`${styles.btnAction} ${styles.btnSuspend}`}
-                          >
-                            Suspender
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className={`${styles.btnAction} ${styles.btnDisabled}`}
-                            disabled
-                          >
-                            {getSuspendDisabledLabel(estudiante.estado)}
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteEstudiante(estudiante)}
-                          className={`${styles.btnAction} ${styles.btnDelete}`}
-                        >
-                          Eliminar
-                        </button>
-                      </div>
+                      <StudentActions
+                        estudiante={estudiante}
+                        profileLoading={profileLoading}
+                        onView={() => void openProfile(estudiante)}
+                        onEdit={() => handleEditEstudiante(estudiante)}
+                        onSuspend={() => handleSuspendEstudiante(estudiante)}
+                        onDelete={() => handleDeleteEstudiante(estudiante)}
+                      />
                     </td>
                   )}
                 </tr>

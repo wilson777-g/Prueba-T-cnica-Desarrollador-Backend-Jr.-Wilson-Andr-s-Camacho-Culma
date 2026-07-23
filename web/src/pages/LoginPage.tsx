@@ -41,7 +41,7 @@ export const LoginPage: React.FC = () => {
     warmUpServer().then(() => setServiceStatus('ready')).catch(() => setServiceStatus('delayed'));
   }, []);
 
-  const useInstitutionalAccount = (demoEmail: string, demoPassword: string) => {
+  const selectInstitutionalAccount = (demoEmail: string, demoPassword: string) => {
     setEmail(demoEmail);
     setPassword(demoPassword);
     setSelectedProfile(demoEmail);
@@ -134,7 +134,7 @@ export const LoginPage: React.FC = () => {
                 <strong>{credential.roleLabel}</strong>
 
                 <p>{credential.role === 'ADMIN' ? 'Configura programas, revisa sedes y consulta indicadores globales.' : 'Gestiona estudiantes y matrículas de la sede asignada.'}</p>
-                <button type="button" onClick={() => useInstitutionalAccount(credential.email, credential.password)} className={styles.copyBtn}>{selectedProfile === credential.email ? 'Perfil seleccionado' : 'Seleccionar perfil'}</button>
+                <button type="button" onClick={() => selectInstitutionalAccount(credential.email, credential.password)} className={styles.copyBtn}>{selectedProfile === credential.email ? 'Perfil seleccionado' : 'Seleccionar perfil'}</button>
               </div>
             ))}
           </div>
